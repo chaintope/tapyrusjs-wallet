@@ -1,1 +1,31 @@
-# tapyrusjs-wallet
+# Tapyrus Wallet for Javascript
+
+## Install
+
+```
+npm install chaintope/tapyrusjs-wallet
+```
+
+## Usage
+
+### Cordova Plugin
+
+```
+const tapyrus = require("tapyrusjs-lib");
+const wallet = require("tapyrusjs-wallet");
+
+const alice = new wallet.Wallet.BaseWallet();
+
+alice.keyStore = new wallet.KeyStore.CordovaKeyStore();
+alice.import("tprv8ZgxMBicQKsPd7Uf69XL1XwhmjHopUGep8GuEiJDZmbQz6o58LninorQAfcKZWARbtRtfnLcJ5MQ2AtHcQJCCRUcMRvmDUjyEmNUWwx8UbK");
+
+alice.configure(schema: "http", host: "example.org", port: "50001", path: "/");
+
+// Synchronize utxos with the index server
+await alice.update();
+
+const colorId = Buffer.from("c3ec2fd806701a3f55808cbec3922c38dafaa3070c48c803e9043ee3642c660b46", "hex");
+const balance = alice.balances(colorId);
+
+console.log(balance);
+```
