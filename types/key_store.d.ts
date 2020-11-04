@@ -1,5 +1,5 @@
 export interface KeyStore {
-    addPrivateKey(wif: string): void;
-    addExtendedPrivateKey(extendedPrivateKey: string): void;
+    addPrivateKey(wif: string): Promise<void>;
+    addExtendedPrivateKey(extendedPrivateKey: string): Promise<void>;
     keys(): Promise<string[]>;
 }

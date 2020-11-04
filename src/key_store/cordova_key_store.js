@@ -34,15 +34,19 @@ class CordovaKeyStore {
     this.network = network;
   }
   addPrivateKey(wif) {
-    this.get('tapyrus/wallet/key/count').then(count => {
-      this.set(`tapyrus/wallet/key/${count}`, wif);
-      this.set(`tapyrus/wallet/key/count`, (count + 1).toString());
+    return __awaiter(this, void 0, void 0, function*() {
+      this.get('tapyrus/wallet/key/count').then(count => {
+        this.set(`tapyrus/wallet/key/${count}`, wif);
+        this.set(`tapyrus/wallet/key/count`, (count + 1).toString());
+      });
     });
   }
   addExtendedPrivateKey(extendedPrivateKey) {
-    this.get('tapyrus/wallet/ext/count').then(count => {
-      this.set(`tapyrus/wallet/ext/${count}`, extendedPrivateKey);
-      this.set(`tapyrus/wallet/ext/count`, (count + 1).toString());
+    return __awaiter(this, void 0, void 0, function*() {
+      this.get('tapyrus/wallet/ext/count').then(count => {
+        this.set(`tapyrus/wallet/ext/${count}`, extendedPrivateKey);
+        this.set(`tapyrus/wallet/ext/count`, (count + 1).toString());
+      });
     });
   }
   keys() {
