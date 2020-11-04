@@ -10,14 +10,14 @@ export class CordovaKeyStore implements KeyStore {
     this.network = network;
   }
 
-  addPrivateKey(wif: string): void {
+  async addPrivateKey(wif: string): Promise<void> {
     this.get('tapyrus/wallet/key/count').then(count => {
       this.set(`tapyrus/wallet/key/${count}`, wif);
       this.set(`tapyrus/wallet/key/count`, (count + 1).toString());
     });
   }
 
-  addExtendedPrivateKey(extendedPrivateKey: string): void {
+  async addExtendedPrivateKey(extendedPrivateKey: string): Promise<void> {
     this.get('tapyrus/wallet/ext/count').then(count => {
       this.set(`tapyrus/wallet/ext/${count}`, extendedPrivateKey);
       this.set(`tapyrus/wallet/ext/count`, (count + 1).toString());
@@ -65,6 +65,7 @@ export class CordovaKeyStore implements KeyStore {
       },
     );
   }
+
   private async set(key: string, value: string): Promise<string> {
     return new Promise(
       (resolve, reject): void => {
