@@ -1,6 +1,9 @@
 {
   "compilerOptions": {
     "target": "ES2015",
+    "lib": [
+      "ESNext", "DOM", "ES2015","ES5"
+    ],
     "module": "commonjs",
     "outDir": "./src",
     "rootDir": "./ts_src",

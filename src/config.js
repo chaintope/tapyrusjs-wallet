@@ -15,5 +15,8 @@ class Config {
       this.network = tapyrus.networks.dev;
     }
   }
+  url() {
+    return `${this.schema}://${this.host}:${this.port}/${this.path}`;
+  }
 }
 exports.Config = Config;

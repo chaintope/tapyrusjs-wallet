@@ -1,0 +1,9 @@
+{
+  "include": [
+    "src/**/*.js"
+  ],
+  "exclude": [
+    "src/rpc.js",
+    "**/*.spec.js"
+  ]
+}

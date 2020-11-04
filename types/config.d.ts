@@ -9,4 +9,5 @@ export declare class Config {
     };
     network: tapyrus.Network;
     constructor(params: any);
+    url(): string;
 }
