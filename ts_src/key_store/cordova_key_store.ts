@@ -8,6 +8,11 @@ export class CordovaKeyStore implements KeyStore {
 
   constructor(network: tapyrus.networks.Network) {
     this.network = network;
+    this.get('tapyrus/wallet/key/count').catch(reason => {
+      if (JSON.parse(reason).code === 1) {
+        this.set(`tapyrus/wallet/key/count`, '0');
+      }
+    });
   }
 
   async addPrivateKey(wif: string): Promise<void> {
@@ -58,6 +63,18 @@ export class CordovaKeyStore implements KeyStore {
     return privKeys.concat(extKeys);
   }
 
+  async clear(): Promise<void> {
+    return this.get('tapyrus/wallet/key/count').then(async value => {
+      const count = Number(value);
+
+      for (let i = 0; i < count; i++) {
+        await this.remove(`tapyrus/wallet/key/${i}`);
+      }
+      this.remove('tapyrus/wallet/key/count');
+      return;
+    });
+  }
+
   private async get(key: string): Promise<string> {
     return new Promise(
       (resolve, reject): void => {
@@ -70,6 +87,14 @@ export class CordovaKeyStore implements KeyStore {
     return new Promise(
       (resolve, reject): void => {
         cordova.plugins.SecureKeyStore.set(resolve, reject, key, value);
+      },
+    );
+  }
+
+  private async remove(key: string): Promise<void> {
+    return new Promise(
+      (resolve, reject): void => {
+        cordova.plugins.SecureKeyStore.remove(resolve, reject, key);
       },
     );
   }

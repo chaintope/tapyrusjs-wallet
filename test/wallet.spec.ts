@@ -2,11 +2,15 @@ import * as assert from 'assert';
 import { describe, it } from 'mocha';
 import * as tapyrus from 'tapyrusjs-lib';
 
+import { Balance } from '../src/balance';
 import { Config } from '../src/config';
 import { BaseWallet } from '../src/wallet';
 import { KeyStore } from '../src/key_store';
 import { DataStore } from '../src/data_store';
+import { Utxo } from '../src/utxo';
+import * as util from '../src/util';
 
+import * as sinon from 'sinon';
 class LocalKeyStore implements KeyStore {
   _wifKeys: string[] = [];
   _extKeys: string[] = [];
@@ -47,13 +51,27 @@ class LocalKeyStore implements KeyStore {
 }
 
 class LocalDataStore implements DataStore {
-  data: { [key: string]: any } = {};
+  utxos: Utxo[] = [];
 
-  set(key: string, value: any): void {
-    this.data[key] = value;
+  async clear(): Promise<void> {
+    this.utxos = [];
   }
-  get(key: string): any {
-    return this.data[key];
+
+  async add(utxos: Utxo[]): Promise<void> {
+    this.utxos = this.utxos.concat(utxos);
+  }
+
+  async all(): Promise<Utxo[]> {
+    return this.utxos;
+  }
+
+  async balanceFor(keys: string[], colorId?: string): Promise<Balance> {
+    let utxos: Utxo[];
+    const scripts = util.keyToScript(keys, colorId);
+    utxos = this.utxos.filter((utxo: Utxo) => {
+      return scripts.find((script: string) => script == utxo.scriptPubkey);
+    });
+    return util.sumBalance(utxos, colorId);
   }
 }
 
@@ -80,7 +98,20 @@ const createWallet = (
   };
 };
 
-describe('wallet', () => {
+describe('Wallet', () => {
+  let stub: sinon.SinonStub;
+  const setUpStub = (wallet: BaseWallet) => {
+    stub = sinon.stub();
+    wallet.rpc.request = (_config: Config, _method: string, _params: any[]) => {
+      const result = stub();
+      return result;
+    };
+  };
+
+  afterEach(() => {
+    sinon.restore();
+  });
+
   describe('importExtendedPrivateKey', () => {
     const { wallet: alice, keyStore } = createWallet('prod');
     const xpriv =
@@ -127,6 +158,18 @@ describe('wallet', () => {
         }, new Error('Invalid checksum'));
       });
     });
+
+    context('already added', () => {
+      it('not add the key', async () => {
+        await alice.importExtendedPrivateKey(xpriv);
+        let keys = await keyStore.keys();
+        assert.strictEqual(keys.length, 1);
+
+        await alice.importExtendedPrivateKey(xpriv);
+        keys = await keyStore.keys();
+        assert.strictEqual(keys.length, 1);
+      });
+    });
   });
 
   describe('importWif', () => {
@@ -169,6 +212,173 @@ describe('wallet', () => {
         assert.throws(() => {
           alice.importWif(wif);
         }, new Error('Invalid checksum'));
+      });
+    });
+
+    context('already added', () => {
+      it('not add the key', async () => {
+        await alice.importWif(wif);
+        let keys = await keyStore.keys();
+        assert.strictEqual(keys.length, 1);
+
+        await alice.importWif(wif);
+        keys = await keyStore.keys();
+        assert.strictEqual(keys.length, 1);
+      });
+    });
+  });
+
+  describe('update', () => {
+    const unspnets1 = [
+      {
+        tx_hash:
+          '0000000000000000000000000000000000000000000000000000000000000000',
+        height: 101,
+        tx_pos: 0,
+        color_id:
+          'c1ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff',
+        value: 50_000_000,
+      },
+    ];
+
+    const expected1 = [
+      new Utxo(
+        '0000000000000000000000000000000000000000000000000000000000000000',
+        101,
+        0,
+        '21c1ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffbc76a914e18c333242b4d4ecbdc9b7071743b5bce53ea0ad88ac',
+        'c1ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff',
+        50_000_000,
+      ),
+    ];
+
+    const unspnets2 = [
+      {
+        tx_hash:
+          '1111111111111111111111111111111111111111111111111111111111111111',
+        height: 102,
+        tx_pos: 1,
+        color_id:
+          'c2ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff',
+        value: 10_000_000,
+      },
+      {
+        tx_hash:
+          '2222222222222222222222222222222222222222222222222222222222222222',
+        height: 102,
+        tx_pos: 2,
+        color_id:
+          'c1ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff',
+        value: 10_000,
+      },
+    ];
+
+    const expected2 = [
+      new Utxo(
+        '1111111111111111111111111111111111111111111111111111111111111111',
+        102,
+        1,
+        '21c2ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffbc76a914e18c333242b4d4ecbdc9b7071743b5bce53ea0ad88ac',
+        'c2ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff',
+        10_000_000,
+      ),
+      new Utxo(
+        '2222222222222222222222222222222222222222222222222222222222222222',
+        102,
+        2,
+        '21c1ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffbc76a914e18c333242b4d4ecbdc9b7071743b5bce53ea0ad88ac',
+        'c1ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff',
+        10_000,
+      ),
+    ];
+
+    it('save utxos', async () => {
+      const { wallet: alice, dataStore } = createWallet('prod');
+      setUpStub(alice);
+      stub.onFirstCall().returns(new Promise(resolve => resolve(unspnets1)));
+      stub.onSecondCall().returns(new Promise(resolve => resolve(unspnets2)));
+      const wif = 'KzJYKvdPEkuDanYNecre9QHe4ugRjvMvoLeceRr4j5u2j9gEyQ7n';
+      await alice.importWif(wif);
+      await alice.update();
+      assert.deepStrictEqual(dataStore.utxos, expected1);
+      await alice.update();
+      assert.deepStrictEqual(dataStore.utxos, expected2);
+    });
+  });
+
+  describe('balances', () => {
+    const unspnets = [
+      {
+        tx_hash:
+          '1111111111111111111111111111111111111111111111111111111111111111',
+        height: 102,
+        tx_pos: 1,
+        color_id:
+          'c1ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff',
+        value: 1_000,
+      },
+      {
+        tx_hash:
+          '2222222222222222222222222222222222222222222222222222222222222222',
+        height: 102,
+        tx_pos: 2,
+        color_id:
+          'c1ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff',
+        value: 2_000,
+      },
+      {
+        tx_hash:
+          '1111111111111111111111111111111111111111111111111111111111111111',
+        height: 102,
+        tx_pos: 3,
+        color_id:
+          'c2ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff',
+        value: 3_000,
+      },
+      {
+        tx_hash:
+          '2222222222222222222222222222222222222222222222222222222222222222',
+        height: 0,
+        tx_pos: 2,
+        color_id:
+          'c1ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff',
+        value: 4_000,
+      },
+      {
+        tx_hash:
+          '2222222222222222222222222222222222222222222222222222222222222222',
+        height: 102,
+        tx_pos: 2,
+        value: 5_000,
+      },
+    ];
+
+    const wif = 'KzJYKvdPEkuDanYNecre9QHe4ugRjvMvoLeceRr4j5u2j9gEyQ7n';
+    describe('uncolored coin', () => {
+      it('get uncolored balance', async () => {
+        const { wallet: alice } = createWallet('prod');
+        setUpStub(alice);
+        stub.onFirstCall().returns(new Promise(resolve => resolve(unspnets)));
+        await alice.importWif(wif);
+        await alice.update();
+        const balance = await alice.balance();
+        assert.strictEqual(balance.unconfirmed, 0);
+        assert.strictEqual(balance.confirmed, 5_000);
+      });
+    });
+
+    describe('colored coin', () => {
+      it('get colored balance', async () => {
+        const { wallet: alice } = createWallet('prod');
+        setUpStub(alice);
+        stub.onFirstCall().returns(new Promise(resolve => resolve(unspnets)));
+        await alice.importWif(wif);
+        await alice.update();
+        const balance = await alice.balance(
+          'c1ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff',
+        );
+        assert.strictEqual(balance.unconfirmed, 4_000);
+        assert.strictEqual(balance.confirmed, 3_000);
       });
     });
   });

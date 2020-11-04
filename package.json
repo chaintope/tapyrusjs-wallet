@@ -50,6 +50,7 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
+    "@types/sinon": "^9.0.8",
     "bip32": "^2.0.4",
     "tapyrus-ops": "https://github.com/Yamaguchi/tapyrus-ops#d2266f9d5c931314cc2ad6bd6fa03c9916f854ef",
     "tapyrusjs-lib": "https://github.com/chaintope/tapyrusjs-lib"
@@ -65,6 +66,7 @@
     "proxyquire": "^2.0.1",
     "tapyrusjs-regtest-client": "https://github.com/Yamaguchi/tapyrusjs-regtest-client#5c77b2c0e618e7e367d0f7d291c6c11de3f6ccb3",
     "rimraf": "^2.6.3",
+    "sinon": "^9.2.1",
     "ts-node": "^8.3.0",
     "tslint": "^5.20.1",
     "typescript": "3.2.2"

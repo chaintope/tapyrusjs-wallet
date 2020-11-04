@@ -17,4 +17,7 @@ export class Config {
       this.network = tapyrus.networks.dev;
     }
   }
+  url(): string {
+    return `${this.schema}://${this.host!}:${this.port!}/${this.path!}`;
+  }
 }
