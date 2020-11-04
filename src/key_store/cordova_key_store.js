@@ -32,6 +32,11 @@ const tapyrus = require('tapyrusjs-lib');
 class CordovaKeyStore {
   constructor(network) {
     this.network = network;
+    this.get('tapyrus/wallet/key/count').catch(reason => {
+      if (JSON.parse(reason).code === 1) {
+        this.set(`tapyrus/wallet/key/count`, '0');
+      }
+    });
   }
   addPrivateKey(wif) {
     return __awaiter(this, void 0, void 0, function*() {
@@ -83,6 +88,20 @@ class CordovaKeyStore {
       return privKeys.concat(extKeys);
     });
   }
+  clear() {
+    return __awaiter(this, void 0, void 0, function*() {
+      return this.get('tapyrus/wallet/key/count').then(value =>
+        __awaiter(this, void 0, void 0, function*() {
+          const count = Number(value);
+          for (let i = 0; i < count; i++) {
+            yield this.remove(`tapyrus/wallet/key/${i}`);
+          }
+          this.remove('tapyrus/wallet/key/count');
+          return;
+        }),
+      );
+    });
+  }
   get(key) {
     return __awaiter(this, void 0, void 0, function*() {
       return new Promise((resolve, reject) => {
@@ -94,6 +113,13 @@ class CordovaKeyStore {
     return __awaiter(this, void 0, void 0, function*() {
       return new Promise((resolve, reject) => {
         cordova.plugins.SecureKeyStore.set(resolve, reject, key, value);
+      });
+    });
+  }
+  remove(key) {
+    return __awaiter(this, void 0, void 0, function*() {
+      return new Promise((resolve, reject) => {
+        cordova.plugins.SecureKeyStore.remove(resolve, reject, key);
       });
     });
   }

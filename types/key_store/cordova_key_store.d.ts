@@ -6,6 +6,8 @@ export declare class CordovaKeyStore implements KeyStore {
     addPrivateKey(wif: string): Promise<void>;
     addExtendedPrivateKey(extendedPrivateKey: string): Promise<void>;
     keys(): Promise<string[]>;
+    clear(): Promise<void>;
     private get;
     private set;
+    private remove;
 }
