@@ -10,7 +10,7 @@ npm install chaintope/tapyrusjs-wallet
 
 ### Cordova Plugin
 
-```
+```javascript
 const tapyrus = require("tapyrusjs-lib");
 const wallet = require("tapyrusjs-wallet");
 
