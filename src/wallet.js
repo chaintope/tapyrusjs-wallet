@@ -8,13 +8,13 @@ class BaseWallet {
     this.dataStore = dataStore;
     this.config = config;
   }
-  import(key) {
+  importExtendedPrivateKey(key) {
     const restored = bip32.fromBase58(key, this.config.network);
-    this.keyStore.add(restored.privateKey);
+    this.keyStore.addExtendedPrivateKey(restored);
   }
   importWif(wif) {
     const keyPair = tapyrus.ECPair.fromWIF(wif, this.config.network);
-    this.keyStore.add(keyPair.privateKey);
+    this.keyStore.addPrivateKey(keyPair.privateKey);
   }
 }
 exports.BaseWallet = BaseWallet;

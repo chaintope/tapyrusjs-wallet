@@ -1,5 +1,6 @@
 import * as assert from 'assert';
 import { describe, it } from 'mocha';
+import * as tapyrus from 'tapyrusjs-lib';
 
 import { Config } from '../src/config';
 import * as wallet from '../src/wallet';
@@ -7,14 +8,25 @@ import { KeyStore } from '../src/key_store';
 import { DataStore } from '../src/data_store';
 
 class LocalKeyStore implements KeyStore {
-  keys: Buffer[] = [];
+  _keys: Buffer[] = [];
+  _extKeys: tapyrus.bip32.BIP32Interface[] = [];
 
-  add(key: Buffer) {
-    this.keys.push(key);
+  addPrivateKey(key: Buffer) {
+    this._keys.push(key);
   }
 
+  addExtendedPrivateKey(extendedPrivateKey: tapyrus.bip32.BIP32Interface) {
+    this._extKeys.push(extendedPrivateKey);
+  }
+
+  keys(): string[] {
+    return this._keys
+      .map(k => k.toString('hex'))
+      .concat(this._extKeys.map(ext => ext.privateKey!.toString('hex')));
+  }
   clear() {
-    this.keys = [];
+    this._keys = [];
+    this._extKeys = [];
   }
 }
 
@@ -42,17 +54,14 @@ describe('wallet', () => {
     keyStore.clear();
   });
 
-  describe('import', () => {
+  describe('importExtendedPrivateKey', () => {
     const xpriv =
       'xprv9s21ZrQH143K2xjLUb6KPjDjExyBLXq6K9u1gGQVMLyvewCLXdivoY7w3iRxAk1eX7k51Dxy71QdfRSQMmiMUGUi5iKfsKh2wfZVEGcqXEe';
     it('add key to storage', () => {
-      alice.import(xpriv);
-      assert.deepStrictEqual(
-        keyStore.keys.map((value: Buffer) => {
-          return value.toString('hex');
-        }),
-        ['dbce05e935c31b0970396d75891fd4e8b8abe5aea72819436446399862967b15'],
-      );
+      alice.importExtendedPrivateKey(xpriv);
+      assert.deepStrictEqual(keyStore.keys(), [
+        'dbce05e935c31b0970396d75891fd4e8b8abe5aea72819436446399862967b15',
+      ]);
     });
 
     context('in dev mode', () => {
@@ -71,13 +80,10 @@ describe('wallet', () => {
       const xpriv =
         'tprv8ZgxMBicQKsPeqL5kfoFJ8pSjCAeYnqZuKpzgCFmenmr24wM3AiLx1sgUetKLEQmPq6Vn9K44ZEDDuFx1LydXu8dyXPtUz1p1L85ZZoMUFK';
       it('add key to storage', () => {
-        alice.import(xpriv);
-        assert.deepStrictEqual(
-          keyStore.keys.map((value: Buffer) => {
-            return value.toString('hex');
-          }),
-          ['30433e1ec20bdcf86495de605d223e8b044425b50705c04af6191a85cd7c457f'],
-        );
+        alice.importExtendedPrivateKey(xpriv);
+        assert.deepStrictEqual(keyStore.keys(), [
+          '30433e1ec20bdcf86495de605d223e8b044425b50705c04af6191a85cd7c457f',
+        ]);
       });
     });
   });
@@ -86,12 +92,9 @@ describe('wallet', () => {
     const wif = 'KzJYKvdPEkuDanYNecre9QHe4ugRjvMvoLeceRr4j5u2j9gEyQ7n';
     it('add key to storage', () => {
       alice.importWif(wif);
-      assert.deepStrictEqual(
-        keyStore.keys.map((value: Buffer) => {
-          return value.toString('hex');
-        }),
-        ['5bff37ef1fa65b660d26d28f65b06781e6576d3787a50df61a24ec2f22127fb5'],
-      );
+      assert.deepStrictEqual(keyStore.keys(), [
+        '5bff37ef1fa65b660d26d28f65b06781e6576d3787a50df61a24ec2f22127fb5',
+      ]);
     });
 
     context('in dev mode', () => {
@@ -110,12 +113,9 @@ describe('wallet', () => {
       const wif = 'cQfXnqdEfpbUkE1e32fmWinhh8yqQNTcsNo5krJaECZ2ythpGjvB';
       it('add key to storage', () => {
         alice.importWif(wif);
-        assert.deepStrictEqual(
-          keyStore.keys.map((value: Buffer) => {
-            return value.toString('hex');
-          }),
-          ['5bff37ef1fa65b660d26d28f65b06781e6576d3787a50df61a24ec2f22127fb5'],
-        );
+        assert.deepStrictEqual(keyStore.keys(), [
+          '5bff37ef1fa65b660d26d28f65b06781e6576d3787a50df61a24ec2f22127fb5',
+        ]);
       });
     });
   });

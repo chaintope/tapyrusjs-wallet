@@ -1,3 +1,6 @@
+import * as tapyrus from 'tapyrusjs-lib';
+
 export interface KeyStore {
-  add(key: Buffer): void;
+  addPrivateKey(key: Buffer): void;
+  addExtendedPrivateKey(extendedPrivateKey: tapyrus.bip32.BIP32Interface): void;
 }

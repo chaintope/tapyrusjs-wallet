@@ -29,10 +29,19 @@ var __awaiter =
   };
 Object.defineProperty(exports, '__esModule', { value: true });
 class CordovaKeyStore {
-  add(key) {
+  addPrivateKey(key) {
     this.get('tapyrus/wallet/key/count').then(count => {
       this.set(`tapyrus/wallet/key/${count}`, key.toString('hex'));
       this.set(`tapyrus/wallet/key/count`, count + 1);
+    });
+  }
+  addExtendedPrivateKey(extendedPrivateKey) {
+    this.get('tapyrus/wallet/ext/count').then(count => {
+      this.set(
+        `tapyrus/wallet/ext/${count}`,
+        JSON.stringify(extendedPrivateKey),
+      );
+      this.set(`tapyrus/wallet/ext/count`, count + 1);
     });
   }
   get(key) {
