@@ -13,13 +13,14 @@ npm install chaintope/tapyrusjs-wallet
 ```javascript
 const tapyrus = require("tapyrusjs-lib");
 const wallet = require("tapyrusjs-wallet");
+const keyStore = new wallet.KeyStore.CordovaKeyStore();
+const dataStore = new wallet.DataStore.CordovaDataStore();
+const config = new wallet.Config({schema: "http", host: "example.org", port: "3000", path: "/", network: "dev"});
 
-const alice = new wallet.Wallet.BaseWallet();
+const alice = new wallet.Wallet.BaseWallet(keyStore, dataStore, config);
 
-alice.keyStore = new wallet.KeyStore.CordovaKeyStore();
+
 alice.import("tprv8ZgxMBicQKsPd7Uf69XL1XwhmjHopUGep8GuEiJDZmbQz6o58LninorQAfcKZWARbtRtfnLcJ5MQ2AtHcQJCCRUcMRvmDUjyEmNUWwx8UbK");
-
-alice.configure(schema: "http", host: "example.org", port: "50001", path: "/");
 
 // Synchronize utxos with the index server
 await alice.update();
