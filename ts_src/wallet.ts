@@ -9,7 +9,7 @@ export default interface Wallet {
   dataStore: DataStore;
 
   // Import private key into this wallet.
-  import(key: string): void;
+  importExtendedPrivateKey(key: string): void;
 
   // Import WIF format private key into this wallet.
   importWif(wif: string): void;
@@ -35,14 +35,14 @@ export class BaseWallet implements Wallet {
     this.config = config;
   }
 
-  import(key: string): void {
+  importExtendedPrivateKey(key: string): void {
     const restored = bip32.fromBase58(key, this.config.network);
-    this.keyStore.add(restored.privateKey!);
+    this.keyStore.addExtendedPrivateKey(restored);
   }
 
   importWif(wif: string): void {
     const keyPair = tapyrus.ECPair.fromWIF(wif, this.config.network);
-    this.keyStore.add(keyPair.privateKey!);
+    this.keyStore.addPrivateKey(keyPair.privateKey!);
   }
 
   // async update(): Promise<void> {
