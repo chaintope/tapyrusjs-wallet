@@ -20,7 +20,7 @@ const config = new wallet.Config({schema: "http", host: "example.org", port: "30
 const alice = new wallet.Wallet.BaseWallet(keyStore, dataStore, config);
 
 
-alice.import("tprv8ZgxMBicQKsPd7Uf69XL1XwhmjHopUGep8GuEiJDZmbQz6o58LninorQAfcKZWARbtRtfnLcJ5MQ2AtHcQJCCRUcMRvmDUjyEmNUWwx8UbK");
+alice.importExtendedPrivateKey("tprv8ZgxMBicQKsPd7Uf69XL1XwhmjHopUGep8GuEiJDZmbQz6o58LninorQAfcKZWARbtRtfnLcJ5MQ2AtHcQJCCRUcMRvmDUjyEmNUWwx8UbK");
 
 // Synchronize utxos with the index server
 await alice.update();
