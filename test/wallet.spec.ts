@@ -24,7 +24,7 @@ class LocalKeyStore implements KeyStore {
     this._extKeys.push(extendedPrivateKey);
   }
 
-  keys(): string[] {
+  async keys(): Promise<string[]> {
     return this._wifKeys
       .map(wif => {
         return tapyrus.ECPair.fromWIF(wif, this.network).privateKey!.toString(
@@ -39,6 +39,7 @@ class LocalKeyStore implements KeyStore {
         }),
       );
   }
+
   clear() {
     this._wifKeys = [];
     this._extKeys = [];
@@ -84,9 +85,10 @@ describe('wallet', () => {
     const { wallet: alice, keyStore } = createWallet('prod');
     const xpriv =
       'xprv9s21ZrQH143K2xjLUb6KPjDjExyBLXq6K9u1gGQVMLyvewCLXdivoY7w3iRxAk1eX7k51Dxy71QdfRSQMmiMUGUi5iKfsKh2wfZVEGcqXEe';
-    it('add key to storage', () => {
+    it('add key to storage', async () => {
       alice.importExtendedPrivateKey(xpriv);
-      assert.deepStrictEqual(keyStore.keys(), [
+      const keys = await keyStore.keys();
+      assert.deepStrictEqual(keys, [
         'dbce05e935c31b0970396d75891fd4e8b8abe5aea72819436446399862967b15',
       ]);
     });
@@ -95,9 +97,10 @@ describe('wallet', () => {
       const { wallet: alice, keyStore } = createWallet('dev');
       const xpriv =
         'tprv8ZgxMBicQKsPeqL5kfoFJ8pSjCAeYnqZuKpzgCFmenmr24wM3AiLx1sgUetKLEQmPq6Vn9K44ZEDDuFx1LydXu8dyXPtUz1p1L85ZZoMUFK';
-      it('add key to storage', () => {
+      it('add key to storage', async () => {
         alice.importExtendedPrivateKey(xpriv);
-        assert.deepStrictEqual(keyStore.keys(), [
+        const keys = await keyStore.keys();
+        assert.deepStrictEqual(keys, [
           '30433e1ec20bdcf86495de605d223e8b044425b50705c04af6191a85cd7c457f',
         ]);
       });
@@ -107,9 +110,10 @@ describe('wallet', () => {
   describe('importWif', () => {
     const { wallet: alice, keyStore } = createWallet('prod');
     const wif = 'KzJYKvdPEkuDanYNecre9QHe4ugRjvMvoLeceRr4j5u2j9gEyQ7n';
-    it('add key to storage', () => {
+    it('add key to storage', async () => {
       alice.importWif(wif);
-      assert.deepStrictEqual(keyStore.keys(), [
+      const keys = await keyStore.keys();
+      assert.deepStrictEqual(keys, [
         '5bff37ef1fa65b660d26d28f65b06781e6576d3787a50df61a24ec2f22127fb5',
       ]);
     });
@@ -117,9 +121,10 @@ describe('wallet', () => {
     context('in dev mode', () => {
       const { wallet: alice, keyStore } = createWallet('dev');
       const wif = 'cQfXnqdEfpbUkE1e32fmWinhh8yqQNTcsNo5krJaECZ2ythpGjvB';
-      it('add key to storage', () => {
+      it('add key to storage', async () => {
         alice.importWif(wif);
-        assert.deepStrictEqual(keyStore.keys(), [
+        const keys = await keyStore.keys();
+        assert.deepStrictEqual(keys, [
           '5bff37ef1fa65b660d26d28f65b06781e6576d3787a50df61a24ec2f22127fb5',
         ]);
       });
