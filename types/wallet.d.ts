@@ -12,6 +12,6 @@ export declare class BaseWallet implements Wallet {
     dataStore: DataStore;
     config: Config;
     constructor(keyStore: KeyStore, dataStore: DataStore, config: Config);
-    importExtendedPrivateKey(key: string): void;
+    importExtendedPrivateKey(xpriv: string): void;
     importWif(wif: string): void;
 }

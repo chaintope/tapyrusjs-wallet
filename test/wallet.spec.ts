@@ -3,29 +3,44 @@ import { describe, it } from 'mocha';
 import * as tapyrus from 'tapyrusjs-lib';
 
 import { Config } from '../src/config';
-import * as wallet from '../src/wallet';
+import { BaseWallet } from '../src/wallet';
 import { KeyStore } from '../src/key_store';
 import { DataStore } from '../src/data_store';
 
 class LocalKeyStore implements KeyStore {
-  _keys: Buffer[] = [];
-  _extKeys: tapyrus.bip32.BIP32Interface[] = [];
+  _wifKeys: string[] = [];
+  _extKeys: string[] = [];
+  network: tapyrus.networks.Network;
 
-  addPrivateKey(key: Buffer) {
-    this._keys.push(key);
+  constructor(network: tapyrus.networks.Network) {
+    this.network = network;
   }
 
-  addExtendedPrivateKey(extendedPrivateKey: tapyrus.bip32.BIP32Interface) {
+  addPrivateKey(key: string) {
+    this._wifKeys.push(key);
+  }
+
+  addExtendedPrivateKey(extendedPrivateKey: string) {
     this._extKeys.push(extendedPrivateKey);
   }
 
   keys(): string[] {
-    return this._keys
-      .map(k => k.toString('hex'))
-      .concat(this._extKeys.map(ext => ext.privateKey!.toString('hex')));
+    return this._wifKeys
+      .map(wif => {
+        return tapyrus.ECPair.fromWIF(wif, this.network).privateKey!.toString(
+          'hex',
+        );
+      })
+      .concat(
+        this._extKeys.map(xpriv => {
+          return tapyrus.bip32
+            .fromBase58(xpriv, this.network)
+            .privateKey!.toString('hex');
+        }),
+      );
   }
   clear() {
-    this._keys = [];
+    this._wifKeys = [];
     this._extKeys = [];
   }
 }
@@ -41,20 +56,32 @@ class LocalDataStore implements DataStore {
   }
 }
 
-describe('wallet', () => {
-  const keyStore = new LocalKeyStore();
+const createWallet = (
+  network: string,
+): {
+  wallet: BaseWallet;
+  keyStore: LocalKeyStore;
+  dataStore: LocalDataStore;
+} => {
   const config = new Config({
     host: 'example.org',
     port: '50001',
     path: '/',
+    network,
   });
-  const alice = new wallet.BaseWallet(keyStore, new LocalDataStore(), config);
+  const keyStore = new LocalKeyStore(config.network);
+  const dataStore = new LocalDataStore();
+  const wallet = new BaseWallet(keyStore, dataStore, config);
+  return {
+    wallet,
+    keyStore,
+    dataStore,
+  };
+};
 
-  afterEach(() => {
-    keyStore.clear();
-  });
-
+describe('wallet', () => {
   describe('importExtendedPrivateKey', () => {
+    const { wallet: alice, keyStore } = createWallet('prod');
     const xpriv =
       'xprv9s21ZrQH143K2xjLUb6KPjDjExyBLXq6K9u1gGQVMLyvewCLXdivoY7w3iRxAk1eX7k51Dxy71QdfRSQMmiMUGUi5iKfsKh2wfZVEGcqXEe';
     it('add key to storage', () => {
@@ -65,18 +92,7 @@ describe('wallet', () => {
     });
 
     context('in dev mode', () => {
-      const config = new Config({
-        schema: 'http',
-        host: 'example.org',
-        port: '3000',
-        path: '/',
-        network: 'dev',
-      });
-      const alice = new wallet.BaseWallet(
-        keyStore,
-        new LocalDataStore(),
-        config,
-      );
+      const { wallet: alice, keyStore } = createWallet('dev');
       const xpriv =
         'tprv8ZgxMBicQKsPeqL5kfoFJ8pSjCAeYnqZuKpzgCFmenmr24wM3AiLx1sgUetKLEQmPq6Vn9K44ZEDDuFx1LydXu8dyXPtUz1p1L85ZZoMUFK';
       it('add key to storage', () => {
@@ -89,6 +105,7 @@ describe('wallet', () => {
   });
 
   describe('importWif', () => {
+    const { wallet: alice, keyStore } = createWallet('prod');
     const wif = 'KzJYKvdPEkuDanYNecre9QHe4ugRjvMvoLeceRr4j5u2j9gEyQ7n';
     it('add key to storage', () => {
       alice.importWif(wif);
@@ -98,18 +115,7 @@ describe('wallet', () => {
     });
 
     context('in dev mode', () => {
-      const config = new Config({
-        schema: 'http',
-        host: 'example.org',
-        port: '3001',
-        path: '/',
-        network: 'dev',
-      });
-      const alice = new wallet.BaseWallet(
-        keyStore,
-        new LocalDataStore(),
-        config,
-      );
+      const { wallet: alice, keyStore } = createWallet('dev');
       const wif = 'cQfXnqdEfpbUkE1e32fmWinhh8yqQNTcsNo5krJaECZ2ythpGjvB';
       it('add key to storage', () => {
         alice.importWif(wif);

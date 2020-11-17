@@ -1,5 +1,3 @@
-import * as bip32 from 'bip32';
-import * as tapyrus from 'tapyrusjs-lib';
 import { Config } from './config';
 import { DataStore } from './data_store';
 import { KeyStore } from './key_store';
@@ -35,14 +33,12 @@ export class BaseWallet implements Wallet {
     this.config = config;
   }
 
-  importExtendedPrivateKey(key: string): void {
-    const restored = bip32.fromBase58(key, this.config.network);
-    this.keyStore.addExtendedPrivateKey(restored);
+  importExtendedPrivateKey(xpriv: string): void {
+    this.keyStore.addExtendedPrivateKey(xpriv);
   }
 
   importWif(wif: string): void {
-    const keyPair = tapyrus.ECPair.fromWIF(wif, this.config.network);
-    this.keyStore.addPrivateKey(keyPair.privateKey!);
+    this.keyStore.addPrivateKey(wif);
   }
 
   // async update(): Promise<void> {
