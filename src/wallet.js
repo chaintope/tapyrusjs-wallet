@@ -64,7 +64,7 @@ class BaseWallet {
     return __awaiter(this, void 0, void 0, function*() {
       const keys = yield this.keyStore.keys();
       return Promise.all(keys.map(key => this.listUnspent(key)))
-        .then(utxos => utxos.flat())
+        .then(utxos => utxos.reduce((acc, val) => acc.concat(val), []))
         .then(utxos => {
           this.dataStore.clear().then(() => this.dataStore.add(utxos));
         });
