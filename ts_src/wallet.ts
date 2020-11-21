@@ -1,3 +1,4 @@
+import * as tapyrus from 'tapyrusjs-lib';
 import { Config } from './config';
 import { DataStore } from './data_store';
 import { KeyStore } from './key_store';
@@ -34,10 +35,12 @@ export class BaseWallet implements Wallet {
   }
 
   importExtendedPrivateKey(xpriv: string): void {
+    tapyrus.bip32.fromBase58(xpriv, this.config.network);
     this.keyStore.addExtendedPrivateKey(xpriv);
   }
 
   importWif(wif: string): void {
+    tapyrus.ECPair.fromWIF(wif, this.config.network);
     this.keyStore.addPrivateKey(wif);
   }
 
