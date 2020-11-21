@@ -105,6 +105,28 @@ describe('wallet', () => {
         ]);
       });
     });
+
+    context('invalid network version', () => {
+      const { wallet: alice } = createWallet('prod');
+      const xpriv =
+        'tprv8ZgxMBicQKsPeqL5kfoFJ8pSjCAeYnqZuKpzgCFmenmr24wM3AiLx1sgUetKLEQmPq6Vn9K44ZEDDuFx1LydXu8dyXPtUz1p1L85ZZoMUFK';
+      it('throw exception', async () => {
+        assert.throws(() => {
+          alice.importExtendedPrivateKey(xpriv);
+        }, new TypeError('Invalid network version'));
+      });
+    });
+
+    context('invalid format', () => {
+      const { wallet: alice } = createWallet('prod');
+      const xpriv =
+        '8ZgxMBicQKsPeqL5kfoFJ8pSjCAeYnqZuKpzgCFmenmr24wM3AiLx1sgUetKLEQmPq6Vn9K44ZEDDuFx1LydXu8dyXPtUz1p1L85ZZoMUFK';
+      it('throw exception', async () => {
+        assert.throws(() => {
+          alice.importExtendedPrivateKey(xpriv);
+        }, new Error('Invalid checksum'));
+      });
+    });
   });
 
   describe('importWif', () => {
@@ -127,6 +149,26 @@ describe('wallet', () => {
         assert.deepStrictEqual(keys, [
           '5bff37ef1fa65b660d26d28f65b06781e6576d3787a50df61a24ec2f22127fb5',
         ]);
+      });
+    });
+
+    context('invalid network version', () => {
+      const { wallet: alice } = createWallet('prod');
+      const wif = 'cQfXnqdEfpbUkE1e32fmWinhh8yqQNTcsNo5krJaECZ2ythpGjvB';
+      it('throw exception', async () => {
+        assert.throws(() => {
+          alice.importWif(wif);
+        }, new Error('Invalid network version'));
+      });
+    });
+
+    context('invalid format', () => {
+      const { wallet: alice } = createWallet('prod');
+      const wif = 'xQfXnqdEfpbUkE1e32fmWinhh8yqQNTcsNo5krJaECZ2ythpGjvB';
+      it('throw exception', async () => {
+        assert.throws(() => {
+          alice.importWif(wif);
+        }, new Error('Invalid checksum'));
       });
     });
   });
