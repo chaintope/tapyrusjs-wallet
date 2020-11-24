@@ -50,9 +50,8 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
-    "@types/sinon": "^9.0.8",
     "bip32": "^2.0.4",
-    "tapyrus-ops": "https://github.com/Yamaguchi/tapyrus-ops#d2266f9d5c931314cc2ad6bd6fa03c9916f854ef",
+    "tapyrus-ops": "https://github.com/chaintope/tapyrus-ops",
     "tapyrusjs-lib": "https://github.com/chaintope/tapyrusjs-lib"
   },
   "devDependencies": {
@@ -60,6 +59,8 @@
     "@types/mocha": "^5.2.7",
     "@types/node": "12.7.5",
     "@types/proxyquire": "^1.3.28",
+    "@types/sinon": "^9.0.8",
+    "@types/tapyrusjs-lib": "https://github.com/Yamaguchi/tapyrusjs-lib#c805ae934449a06cd45422e03c8f31f2f4953c74",
     "mocha": "^7.1.1",
     "nyc": "^15.0.0",
     "prettier": "1.16.4",
