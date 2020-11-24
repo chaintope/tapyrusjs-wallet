@@ -47,6 +47,16 @@ export default class CordovaDataStore implements DataStore {
     });
   }
 
+  async remove(txid: Buffer, index: number): Promise<void> {
+    return this.database.transaction((tx: any) => {
+      tx.executeSql(
+        'DELETE FROM utxos WHERE txid = ? AND outIndex = ?',
+        txid,
+        index,
+      );
+    });
+  }
+
   async clear(): Promise<void> {
     return this.database.transaction((tx: any) => {
       tx.executeSql('DELETE FROM utxos');

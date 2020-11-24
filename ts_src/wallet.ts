@@ -21,7 +21,7 @@ export default interface Wallet {
   update(): Promise<void>;
 
   // Broadcast Transaction
-  // broadcast(tx: tapyrus.Transaction): Promise<string>;
+  broadcast(tx: tapyrus.Transaction): Promise<string>;
 
   // Return amount for the specified colorId
   balance(colorId?: string): Promise<Balance>;
@@ -76,9 +76,44 @@ export class BaseWallet implements Wallet {
       });
   }
 
-  // async broadcast(_tx: tapyrus.Transaction): Promise<string> {
-  //   throw Error('Not Implemented');
-  // }
+  async broadcast(tx: tapyrus.Transaction): Promise<string> {
+    const response: any = await this.rpc
+      .request(this.config, 'blockchain.transaction.broadcast', [tx.toHex()])
+      .catch((reason: any) => {
+        throw new Error(reason);
+      });
+    tx.ins.forEach(async input => {
+      await this.dataStore.remove(input.hash, input.index);
+    });
+    const keys = await this.keyStore.keys();
+    const hashes = util.keyToPubkeyHashes(keys);
+
+    const outputs: Utxo[] = [];
+    tx.outs.forEach(async (output, index) => {
+      const script = output.script;
+      const payment: tapyrus.payments.Payment = tapyrus.payments.util.fromOutputScript(
+        script,
+      );
+      if (payment) {
+        if (hashes.includes(payment.hash!.toString('hex'))) {
+          outputs.push(
+            new Utxo(
+              tx.getId(),
+              0,
+              index,
+              script.toString('hex'),
+              payment.colorId
+                ? payment.colorId.toString('hex')
+                : BaseWallet.COLOR_ID_FOR_TPC,
+              output.value,
+            ),
+          );
+        }
+      }
+    });
+    await this.dataStore.add(outputs);
+    return response.toString();
+  }
 
   async balance(colorId?: string): Promise<Balance> {
     const keys = await this.keyStore.keys();

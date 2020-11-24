@@ -70,6 +70,17 @@ class CordovaDataStore {
       });
     });
   }
+  remove(txid, index) {
+    return __awaiter(this, void 0, void 0, function*() {
+      return this.database.transaction(tx => {
+        tx.executeSql(
+          'DELETE FROM utxos WHERE txid = ? AND outIndex = ?',
+          txid,
+          index,
+        );
+      });
+    });
+  }
   clear() {
     return __awaiter(this, void 0, void 0, function*() {
       return this.database.transaction(tx => {

@@ -25,6 +25,14 @@ export function keyToScript(
   });
 }
 
+export function keyToPubkeyHashes(keys: string[]): string[] {
+  return keys.map(key => {
+    const pubkey = tapyrus.ECPair.fromPrivateKey(Buffer.from(key, 'hex'))
+      .publicKey;
+    return tapyrus.crypto.hash160(pubkey).toString('hex');
+  });
+}
+
 export function sumBalance(
   utxos: Utxo[],
   colorId: string = wallet.BaseWallet.COLOR_ID_FOR_TPC,

@@ -48,6 +48,14 @@ function keyToScript(keys, colorId = wallet.BaseWallet.COLOR_ID_FOR_TPC) {
   });
 }
 exports.keyToScript = keyToScript;
+function keyToPubkeyHashes(keys) {
+  return keys.map(key => {
+    const pubkey = tapyrus.ECPair.fromPrivateKey(Buffer.from(key, 'hex'))
+      .publicKey;
+    return tapyrus.crypto.hash160(pubkey).toString('hex');
+  });
+}
+exports.keyToPubkeyHashes = keyToPubkeyHashes;
 function sumBalance(utxos, colorId = wallet.BaseWallet.COLOR_ID_FOR_TPC) {
   const balance = new balance_1.Balance(colorId);
   return utxos

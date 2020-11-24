@@ -1,3 +1,4 @@
+import * as tapyrus from 'tapyrusjs-lib';
 import { Balance } from './balance';
 import { Config } from './config';
 import { DataStore } from './data_store';
@@ -9,6 +10,7 @@ export default interface Wallet {
     importExtendedPrivateKey(key: string): Promise<void>;
     importWif(wif: string): Promise<void>;
     update(): Promise<void>;
+    broadcast(tx: tapyrus.Transaction): Promise<string>;
     balance(colorId?: string): Promise<Balance>;
 }
 export declare class BaseWallet implements Wallet {
@@ -21,6 +23,7 @@ export declare class BaseWallet implements Wallet {
     importExtendedPrivateKey(xpriv: string): Promise<void>;
     importWif(wif: string): Promise<void>;
     update(): Promise<void>;
+    broadcast(tx: tapyrus.Transaction): Promise<string>;
     balance(colorId?: string): Promise<Balance>;
     private listUnspent;
     private privateToScriptHash;

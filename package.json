@@ -60,7 +60,7 @@
     "@types/node": "12.7.5",
     "@types/proxyquire": "^1.3.28",
     "@types/sinon": "^9.0.8",
-    "@types/tapyrusjs-lib": "https://github.com/Yamaguchi/tapyrusjs-lib#c805ae934449a06cd45422e03c8f31f2f4953c74",
+    "@types/tapyrusjs-lib": "https://github.com/chaintope/tapyrusjs-lib",
     "mocha": "^7.1.1",
     "nyc": "^15.0.0",
     "prettier": "1.16.4",
