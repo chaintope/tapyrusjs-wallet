@@ -5,5 +5,6 @@ export { CordovaDataStore };
 export interface DataStore {
     clear(): Promise<void>;
     add(utxos: Utxo[]): Promise<void>;
+    remove(txid: Buffer, index: number): Promise<void>;
     balanceFor(keys: string[], colorId?: string): Promise<Balance>;
 }

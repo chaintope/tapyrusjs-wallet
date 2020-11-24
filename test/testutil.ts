@@ -71,6 +71,12 @@ export class LocalDataStore implements DataStore {
     });
     return util.sumBalance(utxos, colorId);
   }
+
+  async remove(txid: Buffer, index: number): Promise<void> {
+    this.utxos = this.utxos.filter((utxo: Utxo) => {
+      return utxo.txid != txid.toString('hex') || utxo.index != index;
+    });
+  }
 }
 
 export const createWallet = (
@@ -96,9 +102,8 @@ export const createWallet = (
   };
 };
 
-let stub: sinon.SinonStub;
 export const setUpStub = (wallet: BaseWallet): sinon.SinonStub => {
-  stub = sinon.stub();
+  const stub = sinon.stub();
   wallet.rpc.request = (_config: Config, _method: string, _params: any[]) => {
     const result = stub();
     return result;
