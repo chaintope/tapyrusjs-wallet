@@ -142,9 +142,13 @@ describe('Wallet', () => {
       const xpriv =
         'tprv8ZgxMBicQKsPeqL5kfoFJ8pSjCAeYnqZuKpzgCFmenmr24wM3AiLx1sgUetKLEQmPq6Vn9K44ZEDDuFx1LydXu8dyXPtUz1p1L85ZZoMUFK';
       it('throw exception', async () => {
-        assert.throws(() => {
-          alice.importExtendedPrivateKey(xpriv);
-        }, new TypeError('Invalid network version'));
+        alice
+          .importExtendedPrivateKey(xpriv)
+          .then(
+            () => assert.fail(),
+            (err: Error) =>
+              assert.strictEqual(err.message, 'Invalid network version'),
+          );
       });
     });
 
@@ -153,9 +157,12 @@ describe('Wallet', () => {
       const xpriv =
         '8ZgxMBicQKsPeqL5kfoFJ8pSjCAeYnqZuKpzgCFmenmr24wM3AiLx1sgUetKLEQmPq6Vn9K44ZEDDuFx1LydXu8dyXPtUz1p1L85ZZoMUFK';
       it('throw exception', async () => {
-        assert.throws(() => {
-          alice.importExtendedPrivateKey(xpriv);
-        }, new Error('Invalid checksum'));
+        alice
+          .importExtendedPrivateKey(xpriv)
+          .then(
+            () => assert.fail(),
+            (err: Error) => assert.strictEqual(err.message, 'Invalid checksum'),
+          );
       });
     });
 
@@ -198,20 +205,27 @@ describe('Wallet', () => {
     context('invalid network version', () => {
       const { wallet: alice } = createWallet('prod');
       const wif = 'cQfXnqdEfpbUkE1e32fmWinhh8yqQNTcsNo5krJaECZ2ythpGjvB';
-      it('throw exception', async () => {
-        assert.throws(() => {
-          alice.importWif(wif);
-        }, new Error('Invalid network version'));
+      it('throw exception', () => {
+        alice
+          .importWif(wif)
+          .then(
+            () => assert.fail(),
+            (err: Error) =>
+              assert.strictEqual(err.message, 'Invalid network version'),
+          );
       });
     });
 
     context('invalid format', () => {
       const { wallet: alice } = createWallet('prod');
       const wif = 'xQfXnqdEfpbUkE1e32fmWinhh8yqQNTcsNo5krJaECZ2ythpGjvB';
-      it('throw exception', async () => {
-        assert.throws(() => {
-          alice.importWif(wif);
-        }, new Error('Invalid checksum'));
+      it('throw exception', () => {
+        alice
+          .importWif(wif)
+          .then(
+            () => assert.fail(),
+            (err: Error) => assert.strictEqual(err.message, 'Invalid checksum'),
+          );
       });
     });
 
