@@ -63,12 +63,15 @@ export class LocalDataStore implements DataStore {
     return this.utxos;
   }
 
-  async balanceFor(keys: string[], colorId?: string): Promise<Balance> {
-    let utxos: Utxo[];
+  async utxosFor(keys: string[], colorId?: string): Promise<Utxo[]> {
     const scripts = util.keyToScript(keys, colorId);
-    utxos = this.utxos.filter((utxo: Utxo) => {
+    return this.utxos.filter((utxo: Utxo) => {
       return scripts.find((script: string) => script == utxo.scriptPubkey);
     });
+  }
+
+  async balanceFor(keys: string[], colorId?: string): Promise<Balance> {
+    const utxos = await this.utxosFor(keys, colorId);
     return util.sumBalance(utxos, colorId);
   }
   async processTx(_keys: string[], _tx: tapyrus.Transaction): Promise<void> {

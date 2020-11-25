@@ -1,9 +1,16 @@
 import * as assert from 'assert';
 import { describe, it } from 'mocha';
 
+import { Config } from '../src/config';
 import { Utxo } from '../src/utxo';
 import * as tapyrus from 'tapyrusjs-lib';
-import { createWallet, setUpStub } from './testutil';
+import {
+  createWallet,
+  setUpStub,
+  LocalDataStore,
+  LocalKeyStore,
+} from './testutil';
+import { BaseWallet } from '../src/wallet';
 
 import * as sinon from 'sinon';
 
@@ -339,6 +346,109 @@ describe('Wallet', () => {
         );
         assert.strictEqual(balance.unconfirmed, 4_000);
         assert.strictEqual(balance.confirmed, 3_000);
+      });
+    });
+  });
+
+  describe('utxos', () => {
+    const unspnets = [
+      {
+        tx_hash:
+          '1111111111111111111111111111111111111111111111111111111111111111',
+        height: 102,
+        tx_pos: 1,
+        color_id:
+          'c1ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff',
+        value: 1_000,
+      },
+      {
+        tx_hash:
+          '2222222222222222222222222222222222222222222222222222222222222222',
+        height: 102,
+        tx_pos: 2,
+        color_id:
+          'c1ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff',
+        value: 2_000,
+      },
+      {
+        tx_hash:
+          '1111111111111111111111111111111111111111111111111111111111111111',
+        height: 102,
+        tx_pos: 3,
+        color_id:
+          'c2ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff',
+        value: 3_000,
+      },
+      {
+        tx_hash:
+          '2222222222222222222222222222222222222222222222222222222222222222',
+        height: 0,
+        tx_pos: 2,
+        color_id:
+          'c1ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff',
+        value: 4_000,
+      },
+      {
+        tx_hash:
+          '2222222222222222222222222222222222222222222222222222222222222222',
+        height: 102,
+        tx_pos: 2,
+        value: 5_000,
+      },
+    ];
+
+    const wif = 'KzJYKvdPEkuDanYNecre9QHe4ugRjvMvoLeceRr4j5u2j9gEyQ7n';
+    describe('uncolored coin', () => {
+      it('get uncolored utxos', async () => {
+        const { wallet: alice } = createWallet('prod');
+        const stub = setUpStub(alice);
+        stub.onFirstCall().returns(new Promise(resolve => resolve(unspnets)));
+        await alice.importWif(wif);
+        await alice.update();
+        const utxos = await alice.utxos();
+        assert.strictEqual(utxos.length, 1);
+      });
+    });
+
+    describe('colored coin', () => {
+      it('get colored utxos', async () => {
+        const { wallet: alice } = createWallet('prod');
+        const stub = setUpStub(alice);
+        stub.onFirstCall().returns(new Promise(resolve => resolve(unspnets)));
+        await alice.importWif(wif);
+        await alice.update();
+        const utxos = await alice.utxos(
+          'c1ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff',
+        );
+        assert.strictEqual(utxos.length, 3);
+      });
+    });
+  });
+
+  describe('estimatedFee', () => {
+    context('with default fee rate', () => {
+      it('calculate default fee for tx', () => {
+        const txSize = 1;
+        const { wallet: alice } = createWallet('prod');
+        assert.strictEqual(alice.estimatedFee(txSize), 10);
+      });
+    });
+
+    context('with configured fee rate', () => {
+      it('calculate fee for tx', () => {
+        const txSize = 1;
+
+        const config = new Config({
+          host: 'example.org',
+          port: '50001',
+          path: '/',
+          network: 'prod',
+          feePerByte: 1,
+        });
+        const keyStore = new LocalKeyStore(config.network);
+        const dataStore = new LocalDataStore();
+        const alice = new BaseWallet(keyStore, dataStore, config);
+        assert.strictEqual(alice.estimatedFee(txSize), 1);
       });
     });
   });

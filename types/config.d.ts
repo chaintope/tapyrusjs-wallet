@@ -8,6 +8,7 @@ export declare class Config {
         [key: string]: string;
     };
     network: tapyrus.Network;
+    feePerByte: number;
     constructor(params: any);
     url(): string;
 }

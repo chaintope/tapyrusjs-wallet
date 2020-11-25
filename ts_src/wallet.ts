@@ -25,6 +25,12 @@ export default interface Wallet {
 
   // Return amount for the specified colorId
   balance(colorId?: string): Promise<Balance>;
+
+  // Return utxos associated with colorId(if colorId is not specified, return uncolored utxos)
+  utxos(colorId?: string): Promise<Utxo[]>;
+
+  // Calculate fee for transaction
+  estimatedFee(txSize: number): number;
 }
 
 // Wallet Implementation
@@ -92,6 +98,15 @@ export class BaseWallet implements Wallet {
   async balance(colorId?: string): Promise<Balance> {
     const keys = await this.keyStore.keys();
     return this.dataStore.balanceFor(keys, colorId);
+  }
+
+  async utxos(colorId?: string): Promise<Utxo[]> {
+    const keys = await this.keyStore.keys();
+    return this.dataStore.utxosFor(keys, colorId);
+  }
+
+  estimatedFee(txSize: number): number {
+    return txSize * this.config.feePerByte;
   }
 
   private async listUnspent(key: string): Promise<Utxo[]> {

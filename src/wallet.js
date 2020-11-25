@@ -94,6 +94,15 @@ class BaseWallet {
       return this.dataStore.balanceFor(keys, colorId);
     });
   }
+  utxos(colorId) {
+    return __awaiter(this, void 0, void 0, function*() {
+      const keys = yield this.keyStore.keys();
+      return this.dataStore.utxosFor(keys, colorId);
+    });
+  }
+  estimatedFee(txSize) {
+    return txSize * this.config.feePerByte;
+  }
   listUnspent(key) {
     return __awaiter(this, void 0, void 0, function*() {
       const [p2pkh, scripthash] = this.privateToScriptHash(
