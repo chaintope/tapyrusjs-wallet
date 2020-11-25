@@ -150,4 +150,40 @@ export default class CordovaDataStore implements DataStore {
       return new Balance(colorId, confirmed, unconfirmed);
     });
   }
+
+  async utxosFor(keys: string[], colorId?: string): Promise<Utxo[]> {
+    const scripts: string[] = util.keyToScript(keys, colorId);
+    const inClause = scripts.map(s => "'" + s + "'").join(',');
+    return new Promise(
+      (resolve, reject): void => {
+        this.database.transaction((db: any) => {
+          db.executeSql(
+            'SELECT * FROM utxos WHERE colorId = ?  AND scriptPubkey in (' +
+              inClause +
+              ')',
+            [colorId || Wallet.BaseWallet.COLOR_ID_FOR_TPC],
+            (_db: any, rs: any) => {
+              const utxos: Utxo[] = [];
+              for (let i = 0; i < rs.rows.length; i++) {
+                utxos.push(
+                  new Utxo(
+                    rs.rows.item(i).txid,
+                    rs.rows.item(i).height,
+                    rs.rows.item(i).outIndex,
+                    rs.rows.item(i).scriptPubkey,
+                    rs.rows.item(i).colorId,
+                    rs.rows.item(i).value,
+                  ),
+                );
+              }
+              resolve(utxos);
+            },
+            (_db: any, error: any) => {
+              reject(error);
+            },
+          );
+        });
+      },
+    );
+  }
 }

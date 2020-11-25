@@ -4,6 +4,7 @@ import { Config } from './config';
 import { DataStore } from './data_store';
 import { KeyStore } from './key_store';
 import { Rpc } from './rpc';
+import { Utxo } from './utxo';
 export default interface Wallet {
     keyStore: KeyStore;
     dataStore: DataStore;
@@ -12,6 +13,8 @@ export default interface Wallet {
     update(): Promise<void>;
     broadcast(tx: tapyrus.Transaction): Promise<string>;
     balance(colorId?: string): Promise<Balance>;
+    utxos(colorId?: string): Promise<Utxo[]>;
+    estimatedFee(txSize: number): number;
 }
 export declare class BaseWallet implements Wallet {
     static COLOR_ID_FOR_TPC: string;
@@ -25,6 +28,8 @@ export declare class BaseWallet implements Wallet {
     update(): Promise<void>;
     broadcast(tx: tapyrus.Transaction): Promise<string>;
     balance(colorId?: string): Promise<Balance>;
+    utxos(colorId?: string): Promise<Utxo[]>;
+    estimatedFee(txSize: number): number;
     private listUnspent;
     private privateToScriptHash;
 }

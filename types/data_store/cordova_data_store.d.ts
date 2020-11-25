@@ -9,4 +9,5 @@ export default class CordovaDataStore implements DataStore {
     processTx(keys: string[], tx: tapyrus.Transaction): Promise<void>;
     clear(): Promise<void>;
     balanceFor(keys: string[], colorId?: string): Promise<Balance>;
+    utxosFor(keys: string[], colorId?: string): Promise<Utxo[]>;
 }

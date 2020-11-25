@@ -10,4 +10,5 @@ export interface DataStore {
   add(utxos: Utxo[]): Promise<void>;
   processTx(keys: string[], tx: tapyrus.Transaction): Promise<void>;
   balanceFor(keys: string[], colorId?: string): Promise<Balance>;
+  utxosFor(keys: string[], colorId?: string): Promise<Utxo[]>;
 }
