@@ -1,7 +1,17 @@
 import * as tapyrus from 'tapyrusjs-lib';
+import { Utxo } from './utxo';
 import Wallet from './wallet';
 export interface Token {
-    transfer(wallet: Wallet, toAddress: string, amount: number): Promise<tapyrus.Transaction>;
+    transfer(wallet: Wallet, toAddress: string, amount: number, changePubkeyScript: Buffer): Promise<{
+        txb: tapyrus.TransactionBuilder;
+        inputs: Utxo[];
+    }>;
+}
+export declare class TokenParams {
+    colorId: string;
+    amount: number;
+    toAddress: string;
+    constructor(colorId: string, amount: number, toAddress: string);
 }
 export declare const TokenTypes: {
     REISSUBALE: number;
@@ -9,11 +19,10 @@ export declare const TokenTypes: {
     NFT: number;
 };
 export declare class BaseToken {
-    colorId: string;
-    constructor(colorId: string);
-    transfer(wallet: Wallet, toAddress: string, amount: number): Promise<tapyrus.Transaction>;
-    private keyForScript;
-    private outputToPayment;
+    transfer(wallet: Wallet, params: TokenParams[], changePubkeyScript: Buffer): Promise<{
+        txb: tapyrus.TransactionBuilder;
+        inputs: Utxo[];
+    }>;
     private addressToOutput;
     private collect;
     private transferTxSize;

@@ -29,26 +29,55 @@ var __awaiter =
   };
 Object.defineProperty(exports, '__esModule', { value: true });
 const tapyrus = require('tapyrusjs-lib');
+class TokenParams {
+  constructor(colorId, amount, toAddress) {
+    this.colorId = colorId;
+    this.amount = amount;
+    this.toAddress = toAddress;
+  }
+}
+exports.TokenParams = TokenParams;
 exports.TokenTypes = {
   REISSUBALE: 0xc1,
   NON_REISSUABLE: 0xc2,
   NFT: 0xc3,
 };
 class BaseToken {
-  constructor(colorId) {
-    this.colorId = colorId;
-  }
-  transfer(wallet, toAddress, amount) {
+  transfer(wallet, params, changePubkeyScript) {
     return __awaiter(this, void 0, void 0, function*() {
       const txb = new tapyrus.TransactionBuilder();
-      const coloredUtxos = yield wallet.utxos(this.colorId);
-      const { sum: sumToken, collected: tokens } = this.collect(
-        coloredUtxos,
-        amount,
-      );
-      const coloredScript = this.addressToOutput(
-        toAddress,
-        Buffer.from(this.colorId, 'hex'),
+      txb.setVersion(1);
+      const inputs = [];
+      const uncoloredScript = tapyrus.payments.p2pkh({
+        output: changePubkeyScript,
+      });
+      params.forEach(param =>
+        __awaiter(this, void 0, void 0, function*() {
+          const coloredUtxos = yield wallet.utxos(param.colorId);
+          const { sum: sumToken, collected: tokens } = this.collect(
+            coloredUtxos,
+            param.amount,
+          );
+          const coloredScript = this.addressToOutput(
+            param.toAddress,
+            Buffer.from(param.colorId, 'hex'),
+          );
+          const changeColoredScript = tapyrus.payments.cp2pkh({
+            hash: uncoloredScript.hash,
+            colorId: Buffer.from(param.colorId, 'hex'),
+          }).output;
+          tokens.map(utxo => {
+            txb.addInput(
+              utxo.txid,
+              utxo.index,
+              undefined,
+              Buffer.from(utxo.scriptPubkey, 'hex'),
+            );
+            inputs.push(utxo);
+          });
+          txb.addOutput(coloredScript, param.amount);
+          txb.addOutput(changeColoredScript, sumToken - param.amount);
+        }),
       );
       const uncoloredUtxos = yield wallet.utxos();
       const fee = wallet.estimatedFee(this.transferTxSize());
@@ -56,83 +85,32 @@ class BaseToken {
         uncoloredUtxos,
         fee,
       );
-      const uncoloredScript = this.addressToOutput(toAddress, undefined);
-      tokens.map(utxo => {
-        txb.addInput(utxo.txid, utxo.index);
-      });
       tpcs.map(utxo => {
-        txb.addInput(utxo.txid, utxo.index);
-      });
-      txb.addOutput(coloredScript, sumToken - amount);
-      txb.addOutput(uncoloredScript, sumTpc - fee);
-      let i = 0;
-      console.log(txb);
-      tokens.forEach(utxo =>
-        __awaiter(this, void 0, void 0, function*() {
-          const keyPair = yield this.keyForScript(wallet, utxo.scriptPubkey);
-          console.log(keyPair);
-          txb.sign({
-            prevOutScriptType: 'p2pkh',
-            vin: i++,
-            keyPair,
-          });
-        }),
-      );
-      tpcs.forEach(utxo =>
-        __awaiter(this, void 0, void 0, function*() {
-          const keyPair = yield this.keyForScript(wallet, utxo.scriptPubkey);
-          console.log(keyPair);
-          txb.sign({
-            prevOutScriptType: 'p2pkh',
-            vin: i++,
-            keyPair,
-          });
-        }),
-      );
-      return txb.build();
-    });
-  }
-  keyForScript(wallet, script) {
-    return __awaiter(this, void 0, void 0, function*() {
-      const payment = this.outputToPayment(Buffer.from(script, 'hex'));
-      const keys = yield wallet.keyStore.keys();
-      return keys
-        .map(k => tapyrus.ECPair.fromPrivateKey(Buffer.from(k, 'hex')))
-        .find(
-          keyPair =>
-            keyPair.publicKey.toString('hex') === payment.hash.toString('hex'),
+        txb.addInput(
+          utxo.txid,
+          utxo.index,
+          undefined,
+          Buffer.from(utxo.scriptPubkey, 'hex'),
         );
+        inputs.push(utxo);
+      });
+      txb.addOutput(uncoloredScript.output, sumTpc - fee);
+      return { txb, inputs };
     });
-  }
-  outputToPayment(output) {
-    try {
-      return tapyrus.payments.cp2pkh({ output });
-    } catch (_a) {}
-    try {
-      return tapyrus.payments.p2pkh({ output });
-    } catch (_b) {}
-    throw new Error('Invalid script type');
   }
   addressToOutput(address, colorId) {
-    console.log(address, colorId);
     if (colorId) {
       try {
         return tapyrus.payments.cp2pkh({ address }).output;
-      } catch (e) {
-        console.log(e);
-      }
+      } catch (e) {}
       try {
         const hash = tapyrus.payments.p2pkh({ address }).hash;
         return tapyrus.payments.cp2pkh({ hash, colorId }).output;
-      } catch (e) {
-        console.log(e);
-      }
+      } catch (e) {}
     } else {
       try {
         return tapyrus.payments.p2pkh({ address }).output;
-      } catch (e) {
-        console.log(e);
-      }
+      } catch (e) {}
     }
     throw new Error('Invalid address type.');
   }
