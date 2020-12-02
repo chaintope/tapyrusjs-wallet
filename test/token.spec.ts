@@ -2,6 +2,7 @@ import * as assert from 'assert';
 import { describe, it } from 'mocha';
 // import * as tapyrus from 'tapyrusjs-lib';
 
+import { sign } from '../src/signer';
 import { BaseToken } from '../src/token';
 import { Utxo } from '../src/utxo';
 import { createWallet } from './testutil';
@@ -11,7 +12,7 @@ describe('Token', () => {
   describe('transfer', () => {
     const colorId =
       'c1ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff';
-    const token = new BaseToken(colorId);
+    const token = new BaseToken();
     const { wallet: wallet } = createWallet('prod');
     const wif = 'KzJYKvdPEkuDanYNecre9QHe4ugRjvMvoLeceRr4j5u2j9gEyQ7n';
     wallet.importWif(wif);
@@ -46,10 +47,26 @@ describe('Token', () => {
     const amount = 1;
     it('should build transaction', async () => {
       await wallet.dataStore.add(utxos);
-      const tx = await token.transfer(wallet, toAddress, amount);
-      console.log(tx);
+      const changePubkeyScript = Buffer.from(
+        '76a914e18c333242b4d4ecbdc9b7071743b5bce53ea0ad88ac',
+        'hex',
+      );
+      const result = await token.transfer(
+        wallet,
+        [
+          {
+            colorId: colorId,
+            amount: amount,
+            toAddress: toAddress,
+          },
+        ],
+        changePubkeyScript,
+      );
+      const tx = result.txb.buildIncomplete();
       assert.strictEqual(tx.ins.length, 2);
-      assert.strictEqual(tx.outs.length, 4);
+      assert.strictEqual(tx.outs.length, 3);
+      const signedTxb = await sign(wallet, result.txb, result.inputs);
+      console.log(signedTxb.build().toHex());
     });
   });
 });

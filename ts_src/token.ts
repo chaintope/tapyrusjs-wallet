@@ -7,7 +7,23 @@ export interface Token {
     wallet: Wallet,
     toAddress: string,
     amount: number,
-  ): Promise<tapyrus.Transaction>;
+    changePubkeyScript: Buffer,
+  ): Promise<{
+    txb: tapyrus.TransactionBuilder;
+    inputs: Utxo[];
+  }>;
+}
+
+export class TokenParams {
+  colorId: string;
+  amount: number;
+  toAddress: string;
+
+  constructor(colorId: string, amount: number, toAddress: string) {
+    this.colorId = colorId;
+    this.amount = amount;
+    this.toAddress = toAddress;
+  }
 }
 
 export const TokenTypes = {
@@ -18,113 +34,82 @@ export const TokenTypes = {
 type TokenTypes = typeof TokenTypes[keyof typeof TokenTypes];
 
 export class BaseToken {
-  colorId: string;
-
-  constructor(colorId: string) {
-    this.colorId = colorId;
-  }
-
   async transfer(
     wallet: Wallet,
-    toAddress: string,
-    amount: number,
-  ): Promise<tapyrus.Transaction> {
+    params: TokenParams[],
+    changePubkeyScript: Buffer,
+  ): Promise<{
+    txb: tapyrus.TransactionBuilder;
+    inputs: Utxo[];
+  }> {
     const txb = new tapyrus.TransactionBuilder();
+    txb.setVersion(1);
 
-    const coloredUtxos = await wallet.utxos(this.colorId);
-    const { sum: sumToken, collected: tokens } = this.collect(
-      coloredUtxos,
-      amount,
-    );
-    const coloredScript: Buffer = this.addressToOutput(
-      toAddress,
-      Buffer.from(this.colorId, 'hex'),
-    );
+    const inputs: Utxo[] = [];
+
+    const uncoloredScript = tapyrus.payments.p2pkh({
+      output: changePubkeyScript,
+    });
+    params.forEach(async param => {
+      const coloredUtxos = await wallet.utxos(param.colorId);
+      const { sum: sumToken, collected: tokens } = this.collect(
+        coloredUtxos,
+        param.amount,
+      );
+      const coloredScript: Buffer = this.addressToOutput(
+        param.toAddress,
+        Buffer.from(param.colorId, 'hex'),
+      );
+
+      const changeColoredScript: Buffer = tapyrus.payments.cp2pkh({
+        hash: uncoloredScript.hash,
+        colorId: Buffer.from(param.colorId, 'hex'),
+      }).output!;
+      tokens.map((utxo: Utxo) => {
+        txb.addInput(
+          utxo.txid,
+          utxo.index,
+          undefined,
+          Buffer.from(utxo.scriptPubkey, 'hex'),
+        );
+        inputs.push(utxo);
+      });
+      txb.addOutput(coloredScript, param.amount);
+      txb.addOutput(changeColoredScript, sumToken - param.amount);
+    });
 
     const uncoloredUtxos = await wallet.utxos();
     const fee = wallet.estimatedFee(this.transferTxSize());
     const { sum: sumTpc, collected: tpcs } = this.collect(uncoloredUtxos, fee);
-    const uncoloredScript: Buffer = this.addressToOutput(toAddress, undefined);
-
-    tokens.map((utxo: Utxo) => {
-      txb.addInput(utxo.txid, utxo.index);
-    });
     tpcs.map((utxo: Utxo) => {
-      txb.addInput(utxo.txid, utxo.index);
+      txb.addInput(
+        utxo.txid,
+        utxo.index,
+        undefined,
+        Buffer.from(utxo.scriptPubkey, 'hex'),
+      );
+      inputs.push(utxo);
     });
-    txb.addOutput(coloredScript, sumToken - amount);
-    txb.addOutput(uncoloredScript, sumTpc - fee);
-
-    let i = 0;
-    console.log(txb);
-    tokens.forEach(async (utxo: Utxo) => {
-      const keyPair = await this.keyForScript(wallet, utxo.scriptPubkey);
-      console.log(keyPair);
-      txb.sign({
-        prevOutScriptType: 'p2pkh',
-        vin: i++,
-        keyPair,
-      });
-    });
-    tpcs.forEach(async (utxo: Utxo) => {
-      const keyPair = await this.keyForScript(wallet, utxo.scriptPubkey);
-      console.log(keyPair);
-      txb.sign({
-        prevOutScriptType: 'p2pkh',
-        vin: i++,
-        keyPair,
-      });
-    });
-    return txb.build();
-  }
-
-  private async keyForScript(
-    wallet: Wallet,
-    script: string,
-  ): Promise<tapyrus.ECPair.ECPairInterface> {
-    const payment = this.outputToPayment(Buffer.from(script, 'hex'));
-    const keys = await wallet.keyStore.keys();
-    return keys
-      .map(k => tapyrus.ECPair.fromPrivateKey(Buffer.from(k, 'hex')))
-      .find(
-        keyPair =>
-          keyPair.publicKey.toString('hex') === payment.hash!.toString('hex'),
-      )!;
-  }
-
-  private outputToPayment(output: Buffer): tapyrus.Payment {
-    try {
-      return tapyrus.payments.cp2pkh({ output });
-    } catch {}
-    try {
-      return tapyrus.payments.p2pkh({ output });
-    } catch {}
-    throw new Error('Invalid script type');
+    txb.addOutput(uncoloredScript.output!, sumTpc - fee);
+    return { txb, inputs };
   }
 
   private addressToOutput(
     address: string,
     colorId: Buffer | undefined,
   ): Buffer {
-    console.log(address, colorId);
     if (colorId) {
       try {
         return tapyrus.payments.cp2pkh({ address }).output!;
-      } catch (e) {
-        console.log(e);
-      }
+      } catch (e) {}
       try {
         const hash = tapyrus.payments.p2pkh({ address }).hash!;
         return tapyrus.payments.cp2pkh({ hash, colorId }).output!;
-      } catch (e) {
-        console.log(e);
-      }
+      } catch (e) {}
     } else {
       try {
         return tapyrus.payments.p2pkh({ address }).output!;
-      } catch (e) {
-        console.log(e);
-      }
+      } catch (e) {}
     }
     throw new Error('Invalid address type.');
   }
