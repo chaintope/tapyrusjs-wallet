@@ -32,74 +32,122 @@ const tapyrus = require('tapyrusjs-lib');
 class CordovaKeyStore {
   constructor(network) {
     this.network = network;
-    this.get('tapyrus/wallet/key/count').catch(reason => {
-      if (JSON.parse(reason).code === 1) {
-        this.set(`tapyrus/wallet/key/count`, '0');
-      }
-    });
   }
   addPrivateKey(wif) {
     return __awaiter(this, void 0, void 0, function*() {
-      this.get('tapyrus/wallet/key/count').then(count => {
-        this.set(`tapyrus/wallet/key/${count}`, wif);
-        this.set(`tapyrus/wallet/key/count`, (count + 1).toString());
-      });
+      yield this.get('tapyrus/wallet/key/count')
+        .then(value =>
+          __awaiter(this, void 0, void 0, function*() {
+            const count = Number(value);
+            yield this.set(`tapyrus/wallet/key/${count}`, wif);
+            yield this.set(`tapyrus/wallet/key/count`, (count + 1).toString());
+          }),
+        )
+        .catch(reason =>
+          __awaiter(this, void 0, void 0, function*() {
+            //first import
+            try {
+              alert(reason);
+              if (JSON.parse(reason).code == 1) {
+                yield this.set(`tapyrus/wallet/key/0`, wif);
+                yield this.set(`tapyrus/wallet/key/count`, '1');
+              }
+            } catch (e) {
+              alert(e);
+            }
+          }),
+        );
     });
   }
   addExtendedPrivateKey(extendedPrivateKey) {
     return __awaiter(this, void 0, void 0, function*() {
-      this.get('tapyrus/wallet/ext/count').then(count => {
-        this.set(`tapyrus/wallet/ext/${count}`, extendedPrivateKey);
-        this.set(`tapyrus/wallet/ext/count`, (count + 1).toString());
-      });
+      yield this.get('tapyrus/wallet/ext/count')
+        .then(value =>
+          __awaiter(this, void 0, void 0, function*() {
+            const count = Number(value);
+            yield this.set(`tapyrus/wallet/ext/${count}`, extendedPrivateKey);
+            yield this.set(`tapyrus/wallet/ext/count`, (count + 1).toString());
+          }),
+        )
+        .catch(reason =>
+          __awaiter(this, void 0, void 0, function*() {
+            //first import
+            if (JSON.parse(reason).code == 1) {
+              yield this.set(`tapyrus/wallet/ext/0`, extendedPrivateKey);
+              yield this.set(`tapyrus/wallet/ext/count`, '1');
+            }
+          }),
+        );
     });
   }
   keys() {
     return __awaiter(this, void 0, void 0, function*() {
-      const privKeys = yield this.get('tapyrus/wallet/key/count').then(value =>
-        __awaiter(this, void 0, void 0, function*() {
-          const count = Number(value);
-          const keys = [];
-          for (let i = 0; i < count; i++) {
-            const wif = yield this.get(`tapyrus/wallet/key/${i}`);
-            const key = tapyrus.ECPair.fromWIF(
-              wif,
-              this.network,
-            ).privateKey.toString('hex');
-            keys.push(key);
-          }
-          return keys;
-        }),
-      );
-      const extKeys = yield this.get('tapyrus/wallet/ext/count').then(value =>
-        __awaiter(this, void 0, void 0, function*() {
-          const count = Number(value);
-          const keys = [];
-          for (let i = 0; i < count; i++) {
-            const xpriv = yield this.get(`tapyrus/wallet/ext/${i}`);
-            const key = tapyrus.bip32
-              .fromBase58(xpriv, this.network)
-              .privateKey.toString('hex');
-            keys.push(key);
-          }
-          return keys;
-        }),
-      );
+      const privKeys = yield this.get('tapyrus/wallet/key/count')
+        .then(value =>
+          __awaiter(this, void 0, void 0, function*() {
+            const count = Number(value);
+            const keys = [];
+            for (let i = 0; i < count; i++) {
+              const wif = yield this.get(`tapyrus/wallet/key/${i}`);
+              const key = tapyrus.ECPair.fromWIF(
+                wif,
+                this.network,
+              ).privateKey.toString('hex');
+              keys.push(key);
+            }
+            return keys;
+          }),
+        )
+        .catch(_ => {
+          return [];
+        });
+      const extKeys = yield this.get('tapyrus/wallet/ext/count')
+        .then(value =>
+          __awaiter(this, void 0, void 0, function*() {
+            const count = Number(value);
+            const keys = [];
+            for (let i = 0; i < count; i++) {
+              const xpriv = yield this.get(`tapyrus/wallet/ext/${i}`);
+              const key = tapyrus.bip32
+                .fromBase58(xpriv, this.network)
+                .privateKey.toString('hex');
+              keys.push(key);
+            }
+            return keys;
+          }),
+        )
+        .catch(_ => {
+          return [];
+        });
       return privKeys.concat(extKeys);
     });
   }
   clear() {
     return __awaiter(this, void 0, void 0, function*() {
-      return this.get('tapyrus/wallet/key/count').then(value =>
-        __awaiter(this, void 0, void 0, function*() {
-          const count = Number(value);
-          for (let i = 0; i < count; i++) {
-            yield this.remove(`tapyrus/wallet/key/${i}`);
-          }
-          this.remove('tapyrus/wallet/key/count');
-          return;
-        }),
-      );
+      yield this.get('tapyrus/wallet/key/count')
+        .then(value =>
+          __awaiter(this, void 0, void 0, function*() {
+            const count = Number(value);
+            for (let i = 0; i < count; i++) {
+              yield this.remove(`tapyrus/wallet/key/${i}`);
+            }
+            this.remove('tapyrus/wallet/key/count');
+            return;
+          }),
+        )
+        .catch(_ => {});
+      yield this.get('tapyrus/wallet/ext/count')
+        .then(value =>
+          __awaiter(this, void 0, void 0, function*() {
+            const count = Number(value);
+            for (let i = 0; i < count; i++) {
+              yield this.remove(`tapyrus/wallet/ext/${i}`);
+            }
+            this.remove('tapyrus/wallet/ext/count');
+            return;
+          }),
+        )
+        .catch(_ => {});
     });
   }
   get(key) {
@@ -124,4 +172,4 @@ class CordovaKeyStore {
     });
   }
 }
-exports.CordovaKeyStore = CordovaKeyStore;
+exports.default = CordovaKeyStore;
