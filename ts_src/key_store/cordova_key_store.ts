@@ -3,34 +3,52 @@ import { KeyStore } from '../key_store';
 
 declare let cordova: any;
 
-export class CordovaKeyStore implements KeyStore {
+export default class CordovaKeyStore implements KeyStore {
   private network: tapyrus.networks.Network;
 
   constructor(network: tapyrus.networks.Network) {
     this.network = network;
-    this.get('tapyrus/wallet/key/count').catch(reason => {
-      if (JSON.parse(reason).code === 1) {
-        this.set(`tapyrus/wallet/key/count`, '0');
-      }
-    });
   }
 
   async addPrivateKey(wif: string): Promise<void> {
-    this.get('tapyrus/wallet/key/count').then(count => {
-      this.set(`tapyrus/wallet/key/${count}`, wif);
-      this.set(`tapyrus/wallet/key/count`, (count + 1).toString());
-    });
+    await this.get('tapyrus/wallet/key/count')
+      .then(async value => {
+        const count = Number(value);
+        await this.set(`tapyrus/wallet/key/${count}`, wif);
+        await this.set(`tapyrus/wallet/key/count`, (count + 1).toString());
+      })
+      .catch(async reason => {
+        //first import
+        try {
+          alert(reason);
+          if (JSON.parse(reason).code == 1) {
+            await this.set(`tapyrus/wallet/key/0`, wif);
+            await this.set(`tapyrus/wallet/key/count`, '1');
+          }
+        } catch (e) {
+          alert(e);
+        }
+      });
   }
 
   async addExtendedPrivateKey(extendedPrivateKey: string): Promise<void> {
-    this.get('tapyrus/wallet/ext/count').then(count => {
-      this.set(`tapyrus/wallet/ext/${count}`, extendedPrivateKey);
-      this.set(`tapyrus/wallet/ext/count`, (count + 1).toString());
-    });
+    await this.get('tapyrus/wallet/ext/count')
+      .then(async value => {
+        const count = Number(value);
+        await this.set(`tapyrus/wallet/ext/${count}`, extendedPrivateKey);
+        await this.set(`tapyrus/wallet/ext/count`, (count + 1).toString());
+      })
+      .catch(async reason => {
+        //first import
+        if (JSON.parse(reason).code == 1) {
+          await this.set(`tapyrus/wallet/ext/0`, extendedPrivateKey);
+          await this.set(`tapyrus/wallet/ext/count`, '1');
+        }
+      });;
   }
 
   async keys(): Promise<string[]> {
-    const privKeys = await this.get('tapyrus/wallet/key/count').then(
+    const privKeys: string[] = await this.get('tapyrus/wallet/key/count').then(
       async value => {
         const count = Number(value);
         const keys: string[] = [];
@@ -44,9 +62,9 @@ export class CordovaKeyStore implements KeyStore {
         }
         return keys;
       },
-    );
-    const extKeys = await this.get('tapyrus/wallet/ext/count').then(
-      async value => {
+    ).catch(_ => {return [];});
+    const extKeys: string[] = await this.get('tapyrus/wallet/ext/count')
+      .then(async value => {
         const count = Number(value);
         const keys: string[] = [];
 
@@ -58,21 +76,35 @@ export class CordovaKeyStore implements KeyStore {
           keys.push(key);
         }
         return keys;
-      },
-    );
+      })
+      .catch(_ => {
+        return [];
+      });;
     return privKeys.concat(extKeys);
   }
 
   async clear(): Promise<void> {
-    return this.get('tapyrus/wallet/key/count').then(async value => {
-      const count = Number(value);
+    await this.get('tapyrus/wallet/key/count')
+      .then(async value => {
+        const count = Number(value);
 
-      for (let i = 0; i < count; i++) {
-        await this.remove(`tapyrus/wallet/key/${i}`);
-      }
-      this.remove('tapyrus/wallet/key/count');
-      return;
-    });
+        for (let i = 0; i < count; i++) {
+          await this.remove(`tapyrus/wallet/key/${i}`);
+        }
+        this.remove('tapyrus/wallet/key/count');
+        return;
+      }).catch(_ => {});
+    await this.get('tapyrus/wallet/ext/count')
+      .then(async value => {
+        const count = Number(value);
+
+        for (let i = 0; i < count; i++) {
+          await this.remove(`tapyrus/wallet/ext/${i}`);
+        }
+        this.remove('tapyrus/wallet/ext/count');
+        return;
+      })
+      .catch(_ => {});
   }
 
   private async get(key: string): Promise<string> {

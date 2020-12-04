@@ -1,5 +1,7 @@
 'use strict';
 Object.defineProperty(exports, '__esModule', { value: true });
+const config_1 = require('./config');
+exports.Config = config_1.Config;
 const DataStore = require('./data_store');
 exports.DataStore = DataStore;
 const KeyStore = require('./key_store');
