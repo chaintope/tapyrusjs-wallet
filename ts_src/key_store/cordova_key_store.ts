@@ -20,13 +20,12 @@ export default class CordovaKeyStore implements KeyStore {
       .catch(async reason => {
         //first import
         try {
-          alert(reason);
           if (JSON.parse(reason).code == 1) {
             await this.set(`tapyrus/wallet/key/0`, wif);
             await this.set(`tapyrus/wallet/key/count`, '1');
           }
         } catch (e) {
-          alert(e);
+          console.log(e);
         }
       });
   }
@@ -61,8 +60,10 @@ export default class CordovaKeyStore implements KeyStore {
           keys.push(key);
         }
         return keys;
-      },
-    ).catch(_ => {return [];});
+      })
+      .catch(_ => {
+        return [];
+      });
     const extKeys: string[] = await this.get('tapyrus/wallet/ext/count')
       .then(async value => {
         const count = Number(value);
@@ -93,7 +94,10 @@ export default class CordovaKeyStore implements KeyStore {
         }
         this.remove('tapyrus/wallet/key/count');
         return;
-      }).catch(_ => {});
+      })
+      .catch(e => {
+        console.log(e);
+      });
     await this.get('tapyrus/wallet/ext/count')
       .then(async value => {
         const count = Number(value);
@@ -104,7 +108,9 @@ export default class CordovaKeyStore implements KeyStore {
         this.remove('tapyrus/wallet/ext/count');
         return;
       })
-      .catch(_ => {});
+      .catch(e => {
+        console.log(e);
+      });
   }
 
   private async get(key: string): Promise<string> {
