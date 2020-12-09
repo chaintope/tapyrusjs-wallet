@@ -79,7 +79,7 @@ export default class CordovaKeyStore implements KeyStore {
       })
       .catch(_ => {
         return [];
-      });;
+      });
     return privKeys.concat(extKeys);
   }
 
