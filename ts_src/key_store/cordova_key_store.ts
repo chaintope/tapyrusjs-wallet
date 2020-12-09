@@ -44,7 +44,7 @@ export default class CordovaKeyStore implements KeyStore {
           await this.set(`tapyrus/wallet/ext/0`, extendedPrivateKey);
           await this.set(`tapyrus/wallet/ext/count`, '1');
         }
-      });;
+      });
   }
 
   async keys(): Promise<string[]> {
