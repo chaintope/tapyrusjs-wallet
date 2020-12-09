@@ -18,8 +18,12 @@ export default class CordovaDataStore implements DataStore {
     });
     this.database.transaction((tx: any) => {
       tx.executeSql(
-        'CREATE TABLE IF NOT EXISTS utxos(txid, height, outIndex, value, scriptPubkey, colorId)',
+        'CREATE TABLE IF NOT EXISTS utxos(txid TEXT NOT NULL, height INTEGER NOT NULL, outIndex INTEGER NOT NULL, value BIGINT NOT NULL, scriptPubkey TEXT NOT NULL, colorId TEXT NOT NULL)',
       );
+      tx.executeSql(
+        'CREATE UNIQUE INDEX IF NOT EXISTS idxTxidAndOutIndex ON utxos(txid, outIndex)',
+      );
+      tx.executeSql('CREATE INDEX IF NOT EXISTS idxColorId ON utxos(colorId)');
     });
   }
 
