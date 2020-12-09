@@ -47,13 +47,12 @@ class CordovaKeyStore {
           __awaiter(this, void 0, void 0, function*() {
             //first import
             try {
-              alert(reason);
               if (JSON.parse(reason).code == 1) {
                 yield this.set(`tapyrus/wallet/key/0`, wif);
                 yield this.set(`tapyrus/wallet/key/count`, '1');
               }
             } catch (e) {
-              alert(e);
+              console.log(e);
             }
           }),
         );
@@ -135,7 +134,9 @@ class CordovaKeyStore {
             return;
           }),
         )
-        .catch(_ => {});
+        .catch(e => {
+          console.log(e);
+        });
       yield this.get('tapyrus/wallet/ext/count')
         .then(value =>
           __awaiter(this, void 0, void 0, function*() {
@@ -147,7 +148,9 @@ class CordovaKeyStore {
             return;
           }),
         )
-        .catch(_ => {});
+        .catch(e => {
+          console.log(e);
+        });
     });
   }
   get(key) {
