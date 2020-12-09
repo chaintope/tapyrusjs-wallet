@@ -17,7 +17,7 @@ export default interface Wallet {
   // Import WIF format private key into this wallet.
   importWif(wif: string): Promise<void>;
 
-  // Synchonize utxos with index server.
+  // Synchronize utxos with index server.
   update(): Promise<void>;
 
   // Broadcast Transaction
