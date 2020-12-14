@@ -3,13 +3,16 @@ Object.defineProperty(exports, '__esModule', { value: true });
 const tapyrus = require('tapyrusjs-lib');
 const balance_1 = require('./balance');
 const wallet = require('./wallet');
-function keyToScript(keys, colorId) {
+function keyToScript(keys, colorId = wallet.BaseWallet.COLOR_ID_FOR_TPC) {
   return keys.map(key => {
     const pubkey = tapyrus.ECPair.fromPrivateKey(Buffer.from(key, 'hex'))
       .publicKey;
-    if (colorId) {
+    if (colorId !== wallet.BaseWallet.COLOR_ID_FOR_TPC) {
       return tapyrus.payments
-        .cp2pkh({ pubkey, colorId: Buffer.from(colorId, 'hex') })
+        .cp2pkh({
+          pubkey,
+          colorId: Buffer.from(colorId, 'hex'),
+        })
         .output.toString('hex');
     } else {
       return tapyrus.payments.p2pkh({ pubkey }).output.toString('hex');
@@ -18,9 +21,7 @@ function keyToScript(keys, colorId) {
 }
 exports.keyToScript = keyToScript;
 function sumBalance(utxos, colorId = wallet.BaseWallet.COLOR_ID_FOR_TPC) {
-  const balance = new balance_1.Balance(
-    colorId || wallet.BaseWallet.COLOR_ID_FOR_TPC,
-  );
+  const balance = new balance_1.Balance(colorId);
   return utxos
     .filter(utxo => utxo.colorId === colorId)
     .reduce((sum, current) => {

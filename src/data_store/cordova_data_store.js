@@ -75,14 +75,14 @@ class CordovaDataStore {
       });
     });
   }
-  balanceFor(keys, colorId) {
+  balanceFor(keys, colorId = __1.Wallet.BaseWallet.COLOR_ID_FOR_TPC) {
     return __awaiter(this, void 0, void 0, function*() {
       const scripts = util.keyToScript(keys, colorId);
       return new Promise((resolve, reject) => {
         this.database.transaction(tx => {
           tx.executeSql(
             'SELECT * FROM utxos WHERE colorId = ?',
-            [colorId || __1.Wallet.BaseWallet.COLOR_ID_FOR_TPC],
+            [colorId],
             (_tx, rs) => {
               const utxos = [];
               for (let i = 0; i < rs.rows.length; i++) {
@@ -99,12 +99,7 @@ class CordovaDataStore {
                   );
                 }
               }
-              resolve(
-                util.sumBalance(
-                  utxos,
-                  colorId || __1.Wallet.BaseWallet.COLOR_ID_FOR_TPC,
-                ),
-              );
+              resolve(util.sumBalance(utxos, colorId));
             },
             (_tx, error) => {
               reject(error);
