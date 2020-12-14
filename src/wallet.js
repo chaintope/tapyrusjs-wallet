@@ -47,7 +47,7 @@ class BaseWallet {
       if (util.belongsToPrivateKeys(keys, restored.privateKey)) {
         return;
       }
-      this.keyStore.addExtendedPrivateKey(xpriv);
+      return this.keyStore.addExtendedPrivateKey(xpriv);
     });
   }
   importWif(wif) {
@@ -57,7 +57,7 @@ class BaseWallet {
       if (util.belongsToPrivateKeys(keys, keyPair.privateKey)) {
         return;
       }
-      this.keyStore.addPrivateKey(wif);
+      return this.keyStore.addPrivateKey(wif);
     });
   }
   update() {

@@ -49,7 +49,7 @@ export class BaseWallet implements Wallet {
     if (util.belongsToPrivateKeys(keys, restored.privateKey)) {
       return;
     }
-    this.keyStore.addExtendedPrivateKey(xpriv);
+    return this.keyStore.addExtendedPrivateKey(xpriv);
   }
 
   async importWif(wif: string): Promise<void> {
@@ -58,7 +58,7 @@ export class BaseWallet implements Wallet {
     if (util.belongsToPrivateKeys(keys, keyPair.privateKey)) {
       return;
     }
-    this.keyStore.addPrivateKey(wif);
+    return this.keyStore.addPrivateKey(wif);
   }
 
   async update(): Promise<void> {
