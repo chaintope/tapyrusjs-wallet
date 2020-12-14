@@ -45,9 +45,9 @@ class CordovaKeyStore {
         )
         .catch(reason =>
           __awaiter(this, void 0, void 0, function*() {
-            //first import
+            // first import
             try {
-              if (JSON.parse(reason).code == 1) {
+              if (JSON.parse(reason).code === 1) {
                 yield this.set(`tapyrus/wallet/key/0`, wif);
                 yield this.set(`tapyrus/wallet/key/count`, '1');
               }
@@ -70,8 +70,8 @@ class CordovaKeyStore {
         )
         .catch(reason =>
           __awaiter(this, void 0, void 0, function*() {
-            //first import
-            if (JSON.parse(reason).code == 1) {
+            // first import
+            if (JSON.parse(reason).code === 1) {
               yield this.set(`tapyrus/wallet/ext/0`, extendedPrivateKey);
               yield this.set(`tapyrus/wallet/ext/count`, '1');
             }
