@@ -130,7 +130,7 @@ class CordovaKeyStore {
             for (let i = 0; i < count; i++) {
               yield this.remove(`tapyrus/wallet/key/${i}`);
             }
-            this.remove('tapyrus/wallet/key/count');
+            yield this.remove('tapyrus/wallet/key/count');
             return;
           }),
         )
@@ -144,7 +144,7 @@ class CordovaKeyStore {
             for (let i = 0; i < count; i++) {
               yield this.remove(`tapyrus/wallet/ext/${i}`);
             }
-            this.remove('tapyrus/wallet/ext/count');
+            yield this.remove('tapyrus/wallet/ext/count');
             return;
           }),
         )

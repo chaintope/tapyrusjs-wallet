@@ -92,7 +92,7 @@ export default class CordovaKeyStore implements KeyStore {
         for (let i = 0; i < count; i++) {
           await this.remove(`tapyrus/wallet/key/${i}`);
         }
-        this.remove('tapyrus/wallet/key/count');
+        await this.remove('tapyrus/wallet/key/count');
         return;
       })
       .catch(e => {
@@ -105,7 +105,7 @@ export default class CordovaKeyStore implements KeyStore {
         for (let i = 0; i < count; i++) {
           await this.remove(`tapyrus/wallet/ext/${i}`);
         }
-        this.remove('tapyrus/wallet/ext/count');
+        await this.remove('tapyrus/wallet/ext/count');
         return;
       })
       .catch(e => {
