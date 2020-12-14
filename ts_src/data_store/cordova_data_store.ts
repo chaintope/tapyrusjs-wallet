@@ -51,7 +51,10 @@ export default class CordovaDataStore implements DataStore {
     });
   }
 
-  async balanceFor(keys: string[], colorId?: string): Promise<Balance> {
+  async balanceFor(
+    keys: string[],
+    colorId: string = Wallet.BaseWallet.COLOR_ID_FOR_TPC,
+  ): Promise<Balance> {
     const scripts: string[] = util.keyToScript(keys, colorId);
 
     return new Promise(
@@ -59,7 +62,7 @@ export default class CordovaDataStore implements DataStore {
         this.database.transaction((tx: any) => {
           tx.executeSql(
             'SELECT * FROM utxos WHERE colorId = ?',
-            [colorId || Wallet.BaseWallet.COLOR_ID_FOR_TPC],
+            [colorId],
             (_tx: any, rs: any) => {
               const utxos: Utxo[] = [];
               for (let i = 0; i < rs.rows.length; i++) {
@@ -76,12 +79,7 @@ export default class CordovaDataStore implements DataStore {
                   );
                 }
               }
-              resolve(
-                util.sumBalance(
-                  utxos,
-                  colorId || Wallet.BaseWallet.COLOR_ID_FOR_TPC,
-                ),
-              );
+              resolve(util.sumBalance(utxos, colorId));
             },
             (_tx: any, error: any) => {
               reject(error);
