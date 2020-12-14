@@ -18,9 +18,9 @@ export default class CordovaKeyStore implements KeyStore {
         await this.set(`tapyrus/wallet/key/count`, (count + 1).toString());
       })
       .catch(async reason => {
-        //first import
+        // first import
         try {
-          if (JSON.parse(reason).code == 1) {
+          if (JSON.parse(reason).code === 1) {
             await this.set(`tapyrus/wallet/key/0`, wif);
             await this.set(`tapyrus/wallet/key/count`, '1');
           }
@@ -38,8 +38,8 @@ export default class CordovaKeyStore implements KeyStore {
         await this.set(`tapyrus/wallet/ext/count`, (count + 1).toString());
       })
       .catch(async reason => {
-        //first import
-        if (JSON.parse(reason).code == 1) {
+        // first import
+        if (JSON.parse(reason).code === 1) {
           await this.set(`tapyrus/wallet/ext/0`, extendedPrivateKey);
           await this.set(`tapyrus/wallet/ext/count`, '1');
         }
@@ -47,8 +47,8 @@ export default class CordovaKeyStore implements KeyStore {
   }
 
   async keys(): Promise<string[]> {
-    const privKeys: string[] = await this.get('tapyrus/wallet/key/count').then(
-      async value => {
+    const privKeys: string[] = await this.get('tapyrus/wallet/key/count')
+      .then(async value => {
         const count = Number(value);
         const keys: string[] = [];
         for (let i = 0; i < count; i++) {
