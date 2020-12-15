@@ -56,37 +56,46 @@ export default class CordovaDataStore implements DataStore {
     colorId: string = Wallet.BaseWallet.COLOR_ID_FOR_TPC,
   ): Promise<Balance> {
     const scripts: string[] = util.keyToScript(keys, colorId);
-
-    return new Promise(
-      (resolve, reject): void => {
-        this.database.transaction((tx: any) => {
-          tx.executeSql(
-            'SELECT * FROM utxos WHERE colorId = ?',
-            [colorId],
-            (_tx: any, rs: any) => {
-              const utxos: Utxo[] = [];
-              for (let i = 0; i < rs.rows.length; i++) {
-                if (scripts.includes(rs.rows.item(i).scriptPubkey)) {
-                  utxos.push(
-                    new Utxo(
-                      rs.rows.item(i).txid,
-                      rs.rows.item(i).height,
-                      rs.rows.item(i).outIndex,
-                      rs.rows.item(i).scriptPubkey,
-                      rs.rows.item(i).colorId,
-                      rs.rows.item(i).value,
-                    ),
-                  );
-                }
-              }
-              resolve(util.sumBalance(utxos, colorId));
-            },
-            (_tx: any, error: any) => {
-              reject(error);
-            },
-          );
-        });
-      },
-    );
+    const inClause = scripts.map(s => "'" + s + "'").join(',');
+    return Promise.all([
+      new Promise(
+        (resolve: (v: number) => void, reject): void => {
+          this.database.transaction((tx: any) => {
+            tx.executeSql(
+              'SELECT SUM(value) as unconfirmed FROM utxos WHERE colorId = ? AND scriptPubkey in (' +
+                inClause +
+                ') AND height = 0',
+              [colorId],
+              (_tx: any, rs: any) => {
+                resolve(rs.rows.item(0).unconfirmed);
+              },
+              (_tx: any, error: any) => {
+                reject(error);
+              },
+            );
+          });
+        },
+      ),
+      new Promise(
+        (resolve: (v: number) => void, reject): void => {
+          this.database.transaction((tx: any) => {
+            tx.executeSql(
+              'SELECT SUM(value) as confirmed FROM utxos WHERE colorId = ? AND scriptPubkey in (' +
+                inClause +
+                ') AND height > 0',
+              [colorId],
+              (_tx: any, rs: any) => {
+                resolve(rs.rows.item(0).confirmed);
+              },
+              (_tx: any, error: any) => {
+                reject(error);
+              },
+            );
+          });
+        },
+      ),
+    ]).then(([unconfirmed, confirmed]) => {
+      return new Balance(colorId, confirmed, unconfirmed);
+    });
   }
 }

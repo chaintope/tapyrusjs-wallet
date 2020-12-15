@@ -30,8 +30,8 @@ var __awaiter =
 Object.defineProperty(exports, '__esModule', { value: true });
 // import { script } from 'tapyrusjs-lib';
 const __1 = require('..');
+const balance_1 = require('../balance');
 const util = require('../util');
-const utxo_1 = require('../utxo');
 class CordovaDataStore {
   constructor() {
     this.database = sqlitePlugin.openDatabase({
@@ -78,34 +78,42 @@ class CordovaDataStore {
   balanceFor(keys, colorId = __1.Wallet.BaseWallet.COLOR_ID_FOR_TPC) {
     return __awaiter(this, void 0, void 0, function*() {
       const scripts = util.keyToScript(keys, colorId);
-      return new Promise((resolve, reject) => {
-        this.database.transaction(tx => {
-          tx.executeSql(
-            'SELECT * FROM utxos WHERE colorId = ?',
-            [colorId],
-            (_tx, rs) => {
-              const utxos = [];
-              for (let i = 0; i < rs.rows.length; i++) {
-                if (scripts.includes(rs.rows.item(i).scriptPubkey)) {
-                  utxos.push(
-                    new utxo_1.Utxo(
-                      rs.rows.item(i).txid,
-                      rs.rows.item(i).height,
-                      rs.rows.item(i).outIndex,
-                      rs.rows.item(i).scriptPubkey,
-                      rs.rows.item(i).colorId,
-                      rs.rows.item(i).value,
-                    ),
-                  );
-                }
-              }
-              resolve(util.sumBalance(utxos, colorId));
-            },
-            (_tx, error) => {
-              reject(error);
-            },
-          );
-        });
+      const inClause = scripts.map(s => "'" + s + "'").join(',');
+      return Promise.all([
+        new Promise((resolve, reject) => {
+          this.database.transaction(tx => {
+            tx.executeSql(
+              'SELECT SUM(value) as unconfirmed FROM utxos WHERE colorId = ? AND scriptPubkey in (' +
+                inClause +
+                ') AND height = 0',
+              [colorId],
+              (_tx, rs) => {
+                resolve(rs.rows.item(0).unconfirmed);
+              },
+              (_tx, error) => {
+                reject(error);
+              },
+            );
+          });
+        }),
+        new Promise((resolve, reject) => {
+          this.database.transaction(tx => {
+            tx.executeSql(
+              'SELECT SUM(value) as confirmed FROM utxos WHERE colorId = ? AND scriptPubkey in (' +
+                inClause +
+                ') AND height > 0',
+              [colorId],
+              (_tx, rs) => {
+                resolve(rs.rows.item(0).confirmed);
+              },
+              (_tx, error) => {
+                reject(error);
+              },
+            );
+          });
+        }),
+      ]).then(([unconfirmed, confirmed]) => {
+        return new balance_1.Balance(colorId, confirmed, unconfirmed);
       });
     });
   }
