@@ -46,7 +46,9 @@ class CordovaDataStore {
       tx.executeSql(
         'CREATE UNIQUE INDEX IF NOT EXISTS idxTxidAndOutIndex ON utxos(txid, outIndex)',
       );
-      tx.executeSql('CREATE INDEX IF NOT EXISTS idxColorId ON utxos(colorId)');
+      tx.executeSql(
+        'CREATE INDEX IF NOT EXISTS idxColorIdScriptPubkeyHeight ON utxos(colorId, scriptPubkey, height)',
+      );
     });
   }
   add(utxos) {
