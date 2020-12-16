@@ -1,4 +1,32 @@
 'use strict';
+var __awaiter =
+  (this && this.__awaiter) ||
+  function(thisArg, _arguments, P, generator) {
+    return new (P || (P = Promise))(function(resolve, reject) {
+      function fulfilled(value) {
+        try {
+          step(generator.next(value));
+        } catch (e) {
+          reject(e);
+        }
+      }
+      function rejected(value) {
+        try {
+          step(generator['throw'](value));
+        } catch (e) {
+          reject(e);
+        }
+      }
+      function step(result) {
+        result.done
+          ? resolve(result.value)
+          : new P(function(resolve) {
+              resolve(result.value);
+            }).then(fulfilled, rejected);
+      }
+      step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+  };
 Object.defineProperty(exports, '__esModule', { value: true });
 const tapyrus = require('tapyrusjs-lib');
 const balance_1 = require('./balance');
@@ -34,11 +62,14 @@ function sumBalance(utxos, colorId = wallet.BaseWallet.COLOR_ID_FOR_TPC) {
     }, balance);
 }
 exports.sumBalance = sumBalance;
-function belongsToPrivateKeys(keys, privateKey) {
-  if (privateKey) {
-    return keys.includes(privateKey.toString('hex'));
-  } else {
-    return false;
-  }
+function belongsToPrivateKeys(keyStore, privateKey) {
+  return __awaiter(this, void 0, void 0, function*() {
+    const keys = yield keyStore.keys();
+    if (privateKey) {
+      return keys.includes(privateKey.toString('hex'));
+    } else {
+      return false;
+    }
+  });
 }
 exports.belongsToPrivateKeys = belongsToPrivateKeys;

@@ -4,6 +4,8 @@ import { describe, it } from 'mocha';
 import * as util from '../src/util';
 import { Utxo } from '../src/utxo';
 import * as wallet from '../src/wallet';
+import * as tapyrus from 'tapyrusjs-lib';
+import { createWallet } from './testutil';
 
 describe('util', () => {
   describe('keyToScript', () => {
@@ -97,35 +99,47 @@ describe('util', () => {
       });
     });
   });
-  describe('belongsToPrivateKeys', () => {
+  describe('belongsToPrivateKeys', async () => {
+    const { wallet: alice, keyStore } = createWallet('prod');
     const keys = [
       '0218271432b4066f5385600050038ef7ce48ee43e51bb8948e4b6a01aa1511b3',
       'fad719d77dd5c99457ac4ceba70d63771d6150c09ebc09905b4aa8226a52d399',
       'a10225f9754155443a2bf2577e916412f7cf31d2085130da98cd221d493cb269',
     ];
+    keys.forEach(async key => {
+      const wif = tapyrus.ECPair.fromPrivateKey(
+        Buffer.from(key, 'hex'),
+      ).toWIF();
+      keyStore;
+      await alice.importWif(wif);
+    });
+
     context('when key is in keys', () => {
-      it('should return true', () => {
+      it('should return true', async () => {
         const privateKey = Buffer.from(
           'fad719d77dd5c99457ac4ceba70d63771d6150c09ebc09905b4aa8226a52d399',
           'hex',
         );
-        assert.strictEqual(util.belongsToPrivateKeys(keys, privateKey), true);
+        const expected = await util.belongsToPrivateKeys(keyStore, privateKey);
+        assert.strictEqual(expected, true);
       });
     });
 
     context('when key is not in keys', () => {
-      it('should return false', () => {
+      it('should return false', async () => {
         const privateKey = Buffer.from(
           'd854439a3150a5b01a9753de34e99e7cde89dad49ff62ce53fa3f75f5f5e53d9',
           'hex',
         );
-        assert.strictEqual(util.belongsToPrivateKeys(keys, privateKey), false);
+        const expected = await util.belongsToPrivateKeys(keyStore, privateKey);
+        assert.strictEqual(expected, false);
       });
     });
 
     context('for undefined', () => {
-      it('should return false', () => {
-        assert.strictEqual(util.belongsToPrivateKeys(keys, undefined), false);
+      it('should return false', async () => {
+        const expected = await util.belongsToPrivateKeys(keyStore, undefined);
+        assert.strictEqual(expected, false);
       });
     });
   });
