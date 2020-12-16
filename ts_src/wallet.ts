@@ -45,8 +45,11 @@ export class BaseWallet implements Wallet {
 
   async importExtendedPrivateKey(xpriv: string): Promise<void> {
     const restored = tapyrus.bip32.fromBase58(xpriv, this.config.network);
-    const keys = await this.keyStore.keys();
-    if (util.belongsToPrivateKeys(keys, restored.privateKey)) {
+    const result = await util.belongsToPrivateKeys(
+      this.keyStore,
+      restored.privateKey,
+    );
+    if (result) {
       return;
     }
     return this.keyStore.addExtendedPrivateKey(xpriv);
@@ -54,8 +57,11 @@ export class BaseWallet implements Wallet {
 
   async importWif(wif: string): Promise<void> {
     const keyPair = tapyrus.ECPair.fromWIF(wif, this.config.network);
-    const keys = await this.keyStore.keys();
-    if (util.belongsToPrivateKeys(keys, keyPair.privateKey)) {
+    const result = await util.belongsToPrivateKeys(
+      this.keyStore,
+      keyPair.privateKey,
+    );
+    if (result) {
       return;
     }
     return this.keyStore.addPrivateKey(wif);

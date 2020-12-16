@@ -1,6 +1,7 @@
 import * as tapyrus from 'tapyrusjs-lib';
 
 import { Balance } from './balance';
+import { KeyStore } from './key_store';
 import { Utxo } from './utxo';
 import * as wallet from './wallet';
 
@@ -41,10 +42,11 @@ export function sumBalance(
     }, balance);
 }
 
-export function belongsToPrivateKeys(
-  keys: string[],
+export async function belongsToPrivateKeys(
+  keyStore: KeyStore,
   privateKey: Buffer | undefined,
-): boolean {
+): Promise<boolean> {
+  const keys = await keyStore.keys();
   if (privateKey) {
     return keys.includes(privateKey.toString('hex'));
   } else {
