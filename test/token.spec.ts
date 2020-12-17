@@ -1,6 +1,5 @@
 import * as assert from 'assert';
 import { describe, it } from 'mocha';
-// import * as tapyrus from 'tapyrusjs-lib';
 
 import { BaseToken, TokenParams } from '../src/token';
 import { Utxo } from '../src/utxo';

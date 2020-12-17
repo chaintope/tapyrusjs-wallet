@@ -1,6 +1,6 @@
 import * as tapyrus from 'tapyrusjs-lib';
 import { Utxo } from './utxo';
-import Wallet, { BaseWallet } from './wallet';
+import Wallet from './wallet';
 
 export async function sign(
   wallet: Wallet,
@@ -10,17 +10,13 @@ export async function sign(
   await Promise.all(
     utxos.map(async (utxo: Utxo, index: number) => {
       const keyPair = await keyForScript(wallet, utxo.scriptPubkey);
-      let type: string;
-      if (utxo.colorId && utxo.colorId !== BaseWallet.COLOR_ID_FOR_TPC) {
-        type = 'cp2pkh';
-      } else {
-        type = 'p2pkh';
+      if (keyPair) {
+        txb.sign({
+          prevOutScriptType: utxo.type(),
+          vin: index,
+          keyPair,
+        });
       }
-      txb.sign({
-        prevOutScriptType: type,
-        vin: index,
-        keyPair,
-      });
     }),
   );
   return txb;
@@ -29,7 +25,7 @@ export async function sign(
 export async function keyForScript(
   wallet: Wallet,
   script: string,
-): Promise<tapyrus.ECPair.ECPairInterface> {
+): Promise<tapyrus.ECPair.ECPairInterface | undefined> {
   const targetHash = outputToPubkeyHash(Buffer.from(script, 'hex'));
   const keys = await wallet.keyStore.keys();
   return keys
@@ -37,7 +33,7 @@ export async function keyForScript(
     .find(keyPair => {
       const hash = tapyrus.payments.p2pkh({ pubkey: keyPair.publicKey }).hash!;
       return hash.toString('hex') === targetHash.toString('hex');
-    })!;
+    });
 }
 
 export function outputToPubkeyHash(output: Buffer): Buffer {
