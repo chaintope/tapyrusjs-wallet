@@ -142,7 +142,7 @@ describe('Wallet', () => {
   });
 
   describe('update', () => {
-    const unspnets1 = [
+    const unspents1 = [
       {
         tx_hash:
           '0000000000000000000000000000000000000000000000000000000000000000',
@@ -165,7 +165,7 @@ describe('Wallet', () => {
       ),
     ];
 
-    const unspnets2 = [
+    const unspents2 = [
       {
         tx_hash:
           '1111111111111111111111111111111111111111111111111111111111111111',
@@ -208,8 +208,8 @@ describe('Wallet', () => {
     it('save utxos', async () => {
       const { wallet: alice, dataStore } = createWallet('prod');
       const stub = setUpStub(alice);
-      stub.onFirstCall().returns(new Promise(resolve => resolve(unspnets1)));
-      stub.onSecondCall().returns(new Promise(resolve => resolve(unspnets2)));
+      stub.onFirstCall().returns(new Promise(resolve => resolve(unspents1)));
+      stub.onSecondCall().returns(new Promise(resolve => resolve(unspents2)));
       const wif = 'KzJYKvdPEkuDanYNecre9QHe4ugRjvMvoLeceRr4j5u2j9gEyQ7n';
       await alice.importWif(wif);
       await alice.update();
@@ -220,7 +220,7 @@ describe('Wallet', () => {
   });
 
   describe('balances', () => {
-    const unspnets = [
+    const unspents = [
       {
         tx_hash:
           '1111111111111111111111111111111111111111111111111111111111111111',
@@ -271,7 +271,7 @@ describe('Wallet', () => {
       it('get uncolored balance', async () => {
         const { wallet: alice } = createWallet('prod');
         const stub = setUpStub(alice);
-        stub.onFirstCall().returns(new Promise(resolve => resolve(unspnets)));
+        stub.onFirstCall().returns(new Promise(resolve => resolve(unspents)));
         await alice.importWif(wif);
         await alice.update();
         const balance = await alice.balance();
@@ -284,7 +284,7 @@ describe('Wallet', () => {
       it('get colored balance', async () => {
         const { wallet: alice } = createWallet('prod');
         const stub = setUpStub(alice);
-        stub.onFirstCall().returns(new Promise(resolve => resolve(unspnets)));
+        stub.onFirstCall().returns(new Promise(resolve => resolve(unspents)));
         await alice.importWif(wif);
         await alice.update();
         const balance = await alice.balance(
