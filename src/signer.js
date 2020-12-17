@@ -29,27 +29,19 @@ var __awaiter =
   };
 Object.defineProperty(exports, '__esModule', { value: true });
 const tapyrus = require('tapyrusjs-lib');
-const wallet_1 = require('./wallet');
 function sign(wallet, txb, utxos) {
   return __awaiter(this, void 0, void 0, function*() {
     yield Promise.all(
       utxos.map((utxo, index) =>
         __awaiter(this, void 0, void 0, function*() {
           const keyPair = yield keyForScript(wallet, utxo.scriptPubkey);
-          let type;
-          if (
-            utxo.colorId &&
-            utxo.colorId !== wallet_1.BaseWallet.COLOR_ID_FOR_TPC
-          ) {
-            type = 'cp2pkh';
-          } else {
-            type = 'p2pkh';
+          if (keyPair) {
+            txb.sign({
+              prevOutScriptType: utxo.type(),
+              vin: index,
+              keyPair,
+            });
           }
-          txb.sign({
-            prevOutScriptType: type,
-            vin: index,
-            keyPair,
-          });
         }),
       ),
     );

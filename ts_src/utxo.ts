@@ -1,3 +1,4 @@
+import { BaseWallet } from './wallet';
 export class Utxo {
   txid: string;
   height: number;
@@ -20,5 +21,13 @@ export class Utxo {
     this.scriptPubkey = scriptPubkey;
     this.colorId = colorId;
     this.value = value;
+  }
+
+  type(): string {
+    if (this.colorId !== BaseWallet.COLOR_ID_FOR_TPC) {
+      return 'cp2pkh';
+    } else {
+      return 'p2pkh';
+    }
   }
 }

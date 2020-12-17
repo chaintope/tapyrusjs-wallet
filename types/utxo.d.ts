@@ -6,4 +6,5 @@ export declare class Utxo {
     scriptPubkey: string;
     colorId: string;
     constructor(txid: string, height: number, index: number, scriptPubkey: string, colorId: string, value: number);
+    type(): string;
 }
