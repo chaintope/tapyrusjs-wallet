@@ -16,23 +16,23 @@ export default class CordovaDataStore implements DataStore {
       location: 'default',
       androidDatabaseProvider: 'system',
     });
-    this.database.transaction((tx: any) => {
-      tx.executeSql(
+    this.database.transaction((db: any) => {
+      db.executeSql(
         'CREATE TABLE IF NOT EXISTS utxos(txid TEXT NOT NULL, height INTEGER NOT NULL, outIndex INTEGER NOT NULL, value BIGINT NOT NULL, scriptPubkey TEXT NOT NULL, colorId TEXT NOT NULL)',
       );
-      tx.executeSql(
+      db.executeSql(
         'CREATE UNIQUE INDEX IF NOT EXISTS idxTxidAndOutIndex ON utxos(txid, outIndex)',
       );
-      tx.executeSql(
+      db.executeSql(
         'CREATE INDEX IF NOT EXISTS idxColorIdScriptPubkeyHeight ON utxos(colorId, scriptPubkey, height)',
       );
     });
   }
 
   async add(utxos: Utxo[]): Promise<void> {
-    return this.database.transaction((tx: any) => {
+    return this.database.transaction((db: any) => {
       utxos.map(utxo => {
-        tx.executeSql(
+        db.executeSql(
           'INSERT INTO utxos(txid, height, outIndex, value, scriptPubkey, colorId) values (?, ?, ?, ?, ?, ?)',
           [
             utxo.txid,
@@ -48,8 +48,8 @@ export default class CordovaDataStore implements DataStore {
   }
 
   async remove(txid: Buffer, index: number): Promise<void> {
-    return this.database.transaction((tx: any) => {
-      tx.executeSql(
+    return this.database.transaction((db: any) => {
+      db.executeSql(
         'DELETE FROM utxos WHERE txid = ? AND outIndex = ?',
         txid,
         index,
@@ -58,8 +58,8 @@ export default class CordovaDataStore implements DataStore {
   }
 
   async clear(): Promise<void> {
-    return this.database.transaction((tx: any) => {
-      tx.executeSql('DELETE FROM utxos');
+    return this.database.transaction((db: any) => {
+      db.executeSql('DELETE FROM utxos');
     });
   }
 
@@ -72,16 +72,16 @@ export default class CordovaDataStore implements DataStore {
     return Promise.all([
       new Promise(
         (resolve: (v: number) => void, reject): void => {
-          this.database.transaction((tx: any) => {
-            tx.executeSql(
+          this.database.transaction((db: any) => {
+            db.executeSql(
               'SELECT SUM(value) as unconfirmed FROM utxos WHERE colorId = ? AND scriptPubkey in (' +
                 inClause +
                 ') AND height = 0',
               [colorId],
-              (_tx: any, rs: any) => {
+              (_db: any, rs: any) => {
                 resolve(rs.rows.item(0).unconfirmed);
               },
-              (_tx: any, error: any) => {
+              (_db: any, error: any) => {
                 reject(error);
               },
             );
@@ -90,16 +90,16 @@ export default class CordovaDataStore implements DataStore {
       ),
       new Promise(
         (resolve: (v: number) => void, reject): void => {
-          this.database.transaction((tx: any) => {
-            tx.executeSql(
+          this.database.transaction((db: any) => {
+            db.executeSql(
               'SELECT SUM(value) as confirmed FROM utxos WHERE colorId = ? AND scriptPubkey in (' +
                 inClause +
                 ') AND height > 0',
               [colorId],
-              (_tx: any, rs: any) => {
+              (_db: any, rs: any) => {
                 resolve(rs.rows.item(0).confirmed);
               },
-              (_tx: any, error: any) => {
+              (_db: any, error: any) => {
                 reject(error);
               },
             );
