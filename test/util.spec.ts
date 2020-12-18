@@ -28,6 +28,23 @@ describe('util', () => {
       });
     });
   });
+
+  describe('keyToPubkeyHashes', () => {
+    const keys = [
+      '0218271432b4066f5385600050038ef7ce48ee43e51bb8948e4b6a01aa1511b3',
+      'fad719d77dd5c99457ac4ceba70d63771d6150c09ebc09905b4aa8226a52d399',
+      'a10225f9754155443a2bf2577e916412f7cf31d2085130da98cd221d493cb269',
+    ];
+    const expected = [
+      'ba0d66f55f927258943be9aa9efcf65241003a5b',
+      'a1c6563e75844750770414f0d9d5071fc7505d13',
+      '8adf47af66337d1c23b2e757e4e4f8ea891bf03c',
+    ];
+    it('convert private key to pubkey hash(hash160)', () => {
+      assert.deepStrictEqual(util.keyToPubkeyHashes(keys), expected);
+    });
+  });
+
   describe('sumBalance', () => {
     const utxos = [
       new Utxo(

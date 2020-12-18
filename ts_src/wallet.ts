@@ -82,36 +82,8 @@ export class BaseWallet implements Wallet {
       .catch((reason: any) => {
         throw new Error(reason);
       });
-    tx.ins.forEach(async input => {
-      await this.dataStore.remove(input.hash, input.index);
-    });
     const keys = await this.keyStore.keys();
-    const hashes = util.keyToPubkeyHashes(keys);
-
-    const outputs: Utxo[] = [];
-    tx.outs.forEach(async (output, index) => {
-      const script = output.script;
-      const payment: tapyrus.payments.Payment = tapyrus.payments.util.fromOutputScript(
-        script,
-      );
-      if (payment) {
-        if (hashes.includes(payment.hash!.toString('hex'))) {
-          outputs.push(
-            new Utxo(
-              tx.getId(),
-              0,
-              index,
-              script.toString('hex'),
-              payment.colorId
-                ? payment.colorId.toString('hex')
-                : BaseWallet.COLOR_ID_FOR_TPC,
-              output.value,
-            ),
-          );
-        }
-      }
-    });
-    await this.dataStore.add(outputs);
+    await this.dataStore.processTx(keys, tx);
     return response.toString();
   }
 

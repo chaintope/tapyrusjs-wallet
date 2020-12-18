@@ -28,7 +28,7 @@ var __awaiter =
     });
   };
 Object.defineProperty(exports, '__esModule', { value: true });
-// import { script } from 'tapyrusjs-lib';
+const tapyrus = require('tapyrusjs-lib');
 const __1 = require('..');
 const balance_1 = require('../balance');
 const util = require('../util');
@@ -70,13 +70,44 @@ class CordovaDataStore {
       });
     });
   }
-  remove(txid, index) {
+  processTx(keys, tx) {
     return __awaiter(this, void 0, void 0, function*() {
-      return this.database.transaction(db => {
-        db.executeSql(
-          'DELETE FROM utxos WHERE txid = ? AND outIndex = ?',
-          txid,
-          index,
+      const hashes = util.keyToPubkeyHashes(keys);
+      return new Promise((resolve, reject) => {
+        this.database.transaction(
+          db => {
+            for (const input of tx.ins) {
+              db.executeSql(
+                'DELETE FROM utxos WHERE txid = ? AND outIndex = ?',
+                [input.hash, input.index],
+              );
+            }
+            for (let i = 0; i < tx.outs.length; i++) {
+              const script = tx.outs[i].script;
+              const payment = tapyrus.payments.util.fromOutputScript(script);
+              if (payment) {
+                if (hashes.includes(payment.hash.toString('hex'))) {
+                  db.executeSql(
+                    'INSERT INTO utxos(txid, height, outIndex, value, scriptPubkey, colorId) values (?, ?, ?, ?, ?, ?)',
+                    [
+                      tx.getId(),
+                      0,
+                      i,
+                      tx.outs[i].value,
+                      script.toString('hex'),
+                      payment.colorId
+                        ? payment.colorId.toString('hex')
+                        : __1.Wallet.BaseWallet.COLOR_ID_FOR_TPC,
+                    ],
+                  );
+                }
+              }
+            }
+            resolve();
+          },
+          error => {
+            reject(error);
+          },
         );
       });
     });

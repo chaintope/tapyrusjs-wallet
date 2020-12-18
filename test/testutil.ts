@@ -71,11 +71,8 @@ export class LocalDataStore implements DataStore {
     });
     return util.sumBalance(utxos, colorId);
   }
-
-  async remove(txid: Buffer, index: number): Promise<void> {
-    this.utxos = this.utxos.filter((utxo: Utxo) => {
-      return utxo.txid != txid.toString('hex') || utxo.index != index;
-    });
+  async processTx(_keys: string[], _tx: tapyrus.Transaction): Promise<void> {
+    return;
   }
 }
 
@@ -104,9 +101,8 @@ export const createWallet = (
 
 export const setUpStub = (wallet: BaseWallet): sinon.SinonStub => {
   const stub = sinon.stub();
-  wallet.rpc.request = (_config: Config, _method: string, _params: any[]) => {
-    const result = stub();
-    return result;
+  wallet.rpc.request = (config: Config, method: string, params: any[]) => {
+    return stub(config, method, params);
   };
   return stub;
 };

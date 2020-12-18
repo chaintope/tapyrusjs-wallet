@@ -1,4 +1,4 @@
-// import { script } from 'tapyrusjs-lib';
+import * as tapyrus from 'tapyrusjs-lib';
 import { Wallet } from '..';
 import { Balance } from '../balance';
 import { DataStore } from '../data_store';
@@ -47,14 +47,50 @@ export default class CordovaDataStore implements DataStore {
     });
   }
 
-  async remove(txid: Buffer, index: number): Promise<void> {
-    return this.database.transaction((db: any) => {
-      db.executeSql(
-        'DELETE FROM utxos WHERE txid = ? AND outIndex = ?',
-        txid,
-        index,
-      );
-    });
+  async processTx(keys: string[], tx: tapyrus.Transaction): Promise<void> {
+    const hashes = util.keyToPubkeyHashes(keys);
+
+    return new Promise(
+      (resolve, reject): void => {
+        this.database.transaction(
+          (db: any) => {
+            for (const input of tx.ins) {
+              db.executeSql(
+                'DELETE FROM utxos WHERE txid = ? AND outIndex = ?',
+                [input.hash, input.index],
+              );
+            }
+            for (let i = 0; i < tx.outs.length; i++) {
+              const script = tx.outs[i].script;
+              const payment: tapyrus.payments.Payment = tapyrus.payments.util.fromOutputScript(
+                script,
+              );
+              if (payment) {
+                if (hashes.includes(payment.hash!.toString('hex'))) {
+                  db.executeSql(
+                    'INSERT INTO utxos(txid, height, outIndex, value, scriptPubkey, colorId) values (?, ?, ?, ?, ?, ?)',
+                    [
+                      tx.getId(),
+                      0,
+                      i,
+                      tx.outs[i].value,
+                      script.toString('hex'),
+                      payment.colorId
+                        ? payment.colorId.toString('hex')
+                        : Wallet.BaseWallet.COLOR_ID_FOR_TPC,
+                    ],
+                  );
+                }
+              }
+            }
+            resolve();
+          },
+          (error: any) => {
+            reject(error);
+          },
+        );
+      },
+    );
   }
 
   async clear(): Promise<void> {
