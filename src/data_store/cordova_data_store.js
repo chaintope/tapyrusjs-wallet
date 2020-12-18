@@ -39,23 +39,23 @@ class CordovaDataStore {
       location: 'default',
       androidDatabaseProvider: 'system',
     });
-    this.database.transaction(tx => {
-      tx.executeSql(
+    this.database.transaction(db => {
+      db.executeSql(
         'CREATE TABLE IF NOT EXISTS utxos(txid TEXT NOT NULL, height INTEGER NOT NULL, outIndex INTEGER NOT NULL, value BIGINT NOT NULL, scriptPubkey TEXT NOT NULL, colorId TEXT NOT NULL)',
       );
-      tx.executeSql(
+      db.executeSql(
         'CREATE UNIQUE INDEX IF NOT EXISTS idxTxidAndOutIndex ON utxos(txid, outIndex)',
       );
-      tx.executeSql(
+      db.executeSql(
         'CREATE INDEX IF NOT EXISTS idxColorIdScriptPubkeyHeight ON utxos(colorId, scriptPubkey, height)',
       );
     });
   }
   add(utxos) {
     return __awaiter(this, void 0, void 0, function*() {
-      return this.database.transaction(tx => {
+      return this.database.transaction(db => {
         utxos.map(utxo => {
-          tx.executeSql(
+          db.executeSql(
             'INSERT INTO utxos(txid, height, outIndex, value, scriptPubkey, colorId) values (?, ?, ?, ?, ?, ?)',
             [
               utxo.txid,
@@ -72,8 +72,8 @@ class CordovaDataStore {
   }
   remove(txid, index) {
     return __awaiter(this, void 0, void 0, function*() {
-      return this.database.transaction(tx => {
-        tx.executeSql(
+      return this.database.transaction(db => {
+        db.executeSql(
           'DELETE FROM utxos WHERE txid = ? AND outIndex = ?',
           txid,
           index,
@@ -83,8 +83,8 @@ class CordovaDataStore {
   }
   clear() {
     return __awaiter(this, void 0, void 0, function*() {
-      return this.database.transaction(tx => {
-        tx.executeSql('DELETE FROM utxos');
+      return this.database.transaction(db => {
+        db.executeSql('DELETE FROM utxos');
       });
     });
   }
@@ -94,32 +94,32 @@ class CordovaDataStore {
       const inClause = scripts.map(s => "'" + s + "'").join(',');
       return Promise.all([
         new Promise((resolve, reject) => {
-          this.database.transaction(tx => {
-            tx.executeSql(
+          this.database.transaction(db => {
+            db.executeSql(
               'SELECT SUM(value) as unconfirmed FROM utxos WHERE colorId = ? AND scriptPubkey in (' +
                 inClause +
                 ') AND height = 0',
               [colorId],
-              (_tx, rs) => {
+              (_db, rs) => {
                 resolve(rs.rows.item(0).unconfirmed);
               },
-              (_tx, error) => {
+              (_db, error) => {
                 reject(error);
               },
             );
           });
         }),
         new Promise((resolve, reject) => {
-          this.database.transaction(tx => {
-            tx.executeSql(
+          this.database.transaction(db => {
+            db.executeSql(
               'SELECT SUM(value) as confirmed FROM utxos WHERE colorId = ? AND scriptPubkey in (' +
                 inClause +
                 ') AND height > 0',
               [colorId],
-              (_tx, rs) => {
+              (_db, rs) => {
                 resolve(rs.rows.item(0).confirmed);
               },
-              (_tx, error) => {
+              (_db, error) => {
                 reject(error);
               },
             );
