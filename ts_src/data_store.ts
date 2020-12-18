@@ -1,3 +1,4 @@
+import * as tapyrus from 'tapyrusjs-lib';
 import { Balance } from './balance';
 import { Utxo } from './utxo';
 
@@ -7,6 +8,6 @@ export { CordovaDataStore };
 export interface DataStore {
   clear(): Promise<void>;
   add(utxos: Utxo[]): Promise<void>;
-  remove(txid: Buffer, index: number): Promise<void>;
+  processTx(keys: string[], tx: tapyrus.Transaction): Promise<void>;
   balanceFor(keys: string[], colorId?: string): Promise<Balance>;
 }

@@ -220,207 +220,48 @@ describe('Wallet', () => {
     });
   });
 
-  describe('broadcast', async () => {
-    context('send TPC transaction', async () => {
-      const { wallet: alice, dataStore } = createWallet('prod');
-      await alice.importWif(
-        'KxqXXkQsa9Dbcr9vk1eSGghxka3btbAU4LaP9vDGhnHvPLX4wBsp',
-      );
-      await alice.importWif(
-        'KzVEeCm3BW8FyqafRFbmSqNcSZWm5dM9J5hpXiTbFSZiGhw55Ws4',
-      );
+  describe('broadcast', () => {
+    const { wallet: alice } = createWallet('prod');
+    const tx = new tapyrus.Transaction();
+    const response =
+      '9b9ebcb5bb47bf78b94fd696186926abc1daf756d833e90268d97fc1b370eca7';
+    context('send TPC transaction', () => {
+      it('should call rpc blockchain.transaction.broadcast', async () => {
+        const stub = setUpStub(alice);
+        stub.onFirstCall().returns(new Promise(resolve => resolve(response)));
+        await alice.broadcast(tx);
+        assert.strictEqual(
+          stub.calledOnceWith(
+            alice.config,
+            'blockchain.transaction.broadcast',
+            [tx.toHex()],
+          ),
+          true,
+        );
+      });
 
-      const stub = setUpStub(alice);
-      const unspents1 = [
-        {
-          tx_hash:
-            '2222222222222222222222222222222222222222222222222222222222222222',
-          height: 102,
-          tx_pos: 1,
-          value: 5_000,
-        },
-      ];
-      const unspents2 = [
-        {
-          tx_hash:
-            '2222222222222222222222222222222222222222222222222222222222222222',
-          height: 102,
-          tx_pos: 2,
-          value: 5_000,
-        },
-      ];
-      const expected_utxo = [
-        new Utxo(
-          '2222222222222222222222222222222222222222222222222222222222222222',
-          102,
-          1,
-          '76a914b17e8592e8ac58f7b8ed4360b3508a62ae5eb4a788ac',
-          '000000000000000000000000000000000000000000000000000000000000000000',
-          5_000,
-        ),
-        new Utxo(
-          '9b9ebcb5bb47bf78b94fd696186926abc1daf756d833e90268d97fc1b370eca7',
-          0,
-          0,
-          '76a914b17e8592e8ac58f7b8ed4360b3508a62ae5eb4a788ac',
-          '000000000000000000000000000000000000000000000000000000000000000000',
-          1_000,
-        ),
-        new Utxo(
-          '9b9ebcb5bb47bf78b94fd696186926abc1daf756d833e90268d97fc1b370eca7',
-          0,
-          1,
-          '76a914b54a8b81dcf2da026e281dd88b14ca36f1ee903c88ac',
-          '000000000000000000000000000000000000000000000000000000000000000000',
-          3_000,
-        ),
-      ];
-      const response =
-        '9b9ebcb5bb47bf78b94fd696186926abc1daf756d833e90268d97fc1b370eca7';
-      stub.onFirstCall().returns(new Promise(resolve => resolve(unspents1)));
-      stub.onSecondCall().returns(new Promise(resolve => resolve(unspents2)));
-      stub.onThirdCall().returns(new Promise(resolve => resolve(response)));
-      await alice.update();
-      it('add/remove utxo which is used in transaction', async () => {
-        const tx = new tapyrus.Transaction();
-        tx.addInput(
-          Buffer.from(
-            '2222222222222222222222222222222222222222222222222222222222222222',
-            'hex',
-          ),
-          2,
-        );
-        tx.addOutput(
-          Buffer.from(
-            '76a914b17e8592e8ac58f7b8ed4360b3508a62ae5eb4a788ac',
-            'hex',
-          ),
-          1_000,
-        );
-        tx.addOutput(
-          Buffer.from(
-            '76a914b54a8b81dcf2da026e281dd88b14ca36f1ee903c88ac',
-            'hex',
-          ),
-          3_000,
-        );
-        const txid = await alice.broadcast(tx);
-        assert.strictEqual(txid, tx.getId());
-        assert.deepStrictEqual(dataStore.utxos, expected_utxo);
+      it('should call dataStore.processTx', async () => {
+        const stub = setUpStub(alice);
+        stub.onFirstCall().returns(new Promise(resolve => resolve(response)));
+        const spy = sinon.spy(alice.dataStore, 'processTx');
+        await alice.broadcast(tx);
+        assert.strictEqual(spy.calledOnce, true);
       });
     });
 
-    context('send Colored transaction', async () => {
-      const { wallet: alice, dataStore } = createWallet('prod');
-      await alice.importWif(
-        'KxqXXkQsa9Dbcr9vk1eSGghxka3btbAU4LaP9vDGhnHvPLX4wBsp',
-      );
-      await alice.importWif(
-        'KzVEeCm3BW8FyqafRFbmSqNcSZWm5dM9J5hpXiTbFSZiGhw55Ws4',
-      );
-
-      const stub = setUpStub(alice);
-      const unspents1 = [
-        {
-          tx_hash:
-            '2222222222222222222222222222222222222222222222222222222222222222',
-          height: 102,
-          tx_pos: 0,
-          color_id:
-            'c1ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff',
-          value: 100,
-        },
-        {
-          tx_hash:
-            '1111111111111111111111111111111111111111111111111111111111111111',
-          height: 101,
-          tx_pos: 1,
-          value: 5_000,
-        },
-      ];
-      const unspents2 = [
-        {
-          tx_hash:
-            '2222222222222222222222222222222222222222222222222222222222222222',
-          height: 102,
-          tx_pos: 1,
-          color_id:
-            'c1ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff',
-          value: 200,
-        },
-      ];
-      const expected_utxo = [
-        new Utxo(
-          '2222222222222222222222222222222222222222222222222222222222222222',
-          102,
-          0,
-          '21c1ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffbc76a914b17e8592e8ac58f7b8ed4360b3508a62ae5eb4a788ac',
-          'c1ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff',
-          100,
-        ),
-        new Utxo(
-          '6e55b027e4329ab604e01542b6e4977a2b4eea4c63779167fabb9d134c0a97da',
-          0,
-          1,
-          '21c1ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffbc76a914b54a8b81dcf2da026e281dd88b14ca36f1ee903c88ac',
-          'c1ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff',
-          199,
-        ),
-        new Utxo(
-          '6e55b027e4329ab604e01542b6e4977a2b4eea4c63779167fabb9d134c0a97da',
-          0,
-          2,
-          '76a914b54a8b81dcf2da026e281dd88b14ca36f1ee903c88ac',
-          '000000000000000000000000000000000000000000000000000000000000000000',
-          3_000,
-        ),
-      ];
-      const response =
-        '6e55b027e4329ab604e01542b6e4977a2b4eea4c63779167fabb9d134c0a97da';
-      stub.onFirstCall().returns(new Promise(resolve => resolve(unspents1)));
-      stub.onSecondCall().returns(new Promise(resolve => resolve(unspents2)));
-      stub.onThirdCall().returns(new Promise(resolve => resolve(response)));
-      await alice.update();
-      it('add/remove colored utxo which is used in transaction', async () => {
-        const tx = new tapyrus.Transaction();
-        tx.addInput(
-          Buffer.from(
-            '1111111111111111111111111111111111111111111111111111111111111111',
-            'hex',
-          ),
-          1,
-        );
-        tx.addInput(
-          Buffer.from(
-            '2222222222222222222222222222222222222222222222222222222222222222',
-            'hex',
-          ),
-          1,
-        );
-        tx.addOutput(
-          Buffer.from(
-            '21c1ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffbc76a9142f636ca97f1ad03e871f03094c1f3cc7d50d3ad988ac',
-            'hex',
-          ),
-          1,
-        );
-        tx.addOutput(
-          Buffer.from(
-            '21c1ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffbc76a914b54a8b81dcf2da026e281dd88b14ca36f1ee903c88ac',
-            'hex',
-          ),
-          199,
-        );
-        tx.addOutput(
-          Buffer.from(
-            '76a914b54a8b81dcf2da026e281dd88b14ca36f1ee903c88ac',
-            'hex',
-          ),
-          3_000,
-        );
-        const txid = await alice.broadcast(tx);
-        assert.strictEqual(txid, tx.getId());
-        assert.deepStrictEqual(dataStore.utxos, expected_utxo);
+    context('when RPC call failed', () => {
+      it('should not call dataStore.processTx', async () => {
+        const stub = setUpStub(alice);
+        stub.onFirstCall().throws(new Error('some error'));
+        const spy = sinon.spy(alice.dataStore, 'processTx');
+        await alice
+          .broadcast(tx)
+          .then(_value => {
+            assert.fail();
+          })
+          .catch(_reason => {
+            assert.strictEqual(spy.notCalled, true);
+          });
       });
     });
   });

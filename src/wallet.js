@@ -83,37 +83,8 @@ class BaseWallet {
         .catch(reason => {
           throw new Error(reason);
         });
-      tx.ins.forEach(input =>
-        __awaiter(this, void 0, void 0, function*() {
-          yield this.dataStore.remove(input.hash, input.index);
-        }),
-      );
       const keys = yield this.keyStore.keys();
-      const hashes = util.keyToPubkeyHashes(keys);
-      const outputs = [];
-      tx.outs.forEach((output, index) =>
-        __awaiter(this, void 0, void 0, function*() {
-          const script = output.script;
-          const payment = tapyrus.payments.util.fromOutputScript(script);
-          if (payment) {
-            if (hashes.includes(payment.hash.toString('hex'))) {
-              outputs.push(
-                new utxo_1.Utxo(
-                  tx.getId(),
-                  0,
-                  index,
-                  script.toString('hex'),
-                  payment.colorId
-                    ? payment.colorId.toString('hex')
-                    : BaseWallet.COLOR_ID_FOR_TPC,
-                  output.value,
-                ),
-              );
-            }
-          }
-        }),
-      );
-      yield this.dataStore.add(outputs);
+      yield this.dataStore.processTx(keys, tx);
       return response.toString();
     });
   }
