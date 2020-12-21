@@ -69,7 +69,7 @@ export class BaseWallet implements Wallet {
 
   async update(): Promise<void> {
     const keys = await this.keyStore.keys();
-    return Promise.all(keys.map(key => this.listUnspent(key)))
+    return Promise.all(keys.map(key => this.listUnspent(key).catch((_r: any):Utxo[] => [])))
       .then(utxos => utxos.reduce((acc, val) => acc.concat(val), []))
       .then((utxos: Utxo[]) => {
         this.dataStore.clear().then(() => this.dataStore.add(utxos));
