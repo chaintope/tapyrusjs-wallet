@@ -85,7 +85,7 @@ class CordovaDataStore {
             for (let i = 0; i < tx.outs.length; i++) {
               const script = tx.outs[i].script;
               const payment = tapyrus.payments.util.fromOutputScript(script);
-              if (payment) {
+              if (payment && payment.hash) {
                 if (hashes.includes(payment.hash.toString('hex'))) {
                   db.executeSql(
                     'INSERT INTO utxos(txid, height, outIndex, value, scriptPubkey, colorId) values (?, ?, ?, ?, ?, ?)',

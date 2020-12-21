@@ -65,8 +65,9 @@ export default class CordovaDataStore implements DataStore {
               const payment: tapyrus.payments.Payment = tapyrus.payments.util.fromOutputScript(
                 script,
               );
-              if (payment) {
-                if (hashes.includes(payment.hash!.toString('hex'))) {
+
+              if (payment && payment.hash) {
+                if (hashes.includes(payment.hash.toString('hex'))) {
                   db.executeSql(
                     'INSERT INTO utxos(txid, height, outIndex, value, scriptPubkey, colorId) values (?, ?, ?, ?, ?, ?)',
                     [
