@@ -74,6 +74,7 @@ class CordovaDataStore {
   processTx(keys, tx) {
     return __awaiter(this, void 0, void 0, function*() {
       const hashes = util.keyToPubkeyHashes(keys);
+      const txid = tx.getId();
       return new Promise((resolve, reject) => {
         this.database.transaction(
           db => {
@@ -94,7 +95,7 @@ class CordovaDataStore {
                   db.executeSql(
                     'INSERT INTO utxos(txid, height, outIndex, value, scriptPubkey, colorId) values (?, ?, ?, ?, ?, ?)',
                     [
-                      tx.getId(),
+                      txid,
                       0,
                       i,
                       tx.outs[i].value,

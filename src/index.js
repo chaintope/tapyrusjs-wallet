@@ -6,5 +6,7 @@ const DataStore = require('./data_store');
 exports.DataStore = DataStore;
 const KeyStore = require('./key_store');
 exports.KeyStore = KeyStore;
+const Signer = require('./signer');
+exports.Signer = Signer;
 const Wallet = require('./wallet');
 exports.Wallet = Wallet;
