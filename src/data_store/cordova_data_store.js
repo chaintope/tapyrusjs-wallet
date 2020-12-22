@@ -79,7 +79,10 @@ class CordovaDataStore {
             for (const input of tx.ins) {
               db.executeSql(
                 'DELETE FROM utxos WHERE txid = ? AND outIndex = ?',
-                [input.hash, input.index],
+                [
+                  tapyrus.bufferutils.reverseBuffer(input.hash).toString('hex'),
+                  input.index,
+                ],
               );
             }
             for (let i = 0; i < tx.outs.length; i++) {
