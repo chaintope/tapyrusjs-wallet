@@ -49,7 +49,7 @@ export default class CordovaDataStore implements DataStore {
 
   async processTx(keys: string[], tx: tapyrus.Transaction): Promise<void> {
     const hashes = util.keyToPubkeyHashes(keys);
-
+    const txid = tx.getId();
     return new Promise(
       (resolve, reject): void => {
         this.database.transaction(
@@ -74,7 +74,7 @@ export default class CordovaDataStore implements DataStore {
                   db.executeSql(
                     'INSERT INTO utxos(txid, height, outIndex, value, scriptPubkey, colorId) values (?, ?, ?, ?, ?, ?)',
                     [
-                      tx.getId(),
+                      txid,
                       0,
                       i,
                       tx.outs[i].value,

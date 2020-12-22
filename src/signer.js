@@ -29,12 +29,18 @@ var __awaiter =
   };
 Object.defineProperty(exports, '__esModule', { value: true });
 const tapyrus = require('tapyrusjs-lib');
-function sign(wallet, txb, utxos) {
+class SignOptions {}
+exports.SignOptions = SignOptions;
+function sign(wallet, txb, utxos, options) {
   return __awaiter(this, void 0, void 0, function*() {
     yield Promise.all(
       utxos.map((utxo, index) =>
         __awaiter(this, void 0, void 0, function*() {
-          const keyPair = yield keyForScript(wallet, utxo.scriptPubkey);
+          const keyPair = yield keyForScript(
+            wallet,
+            utxo.scriptPubkey,
+            options,
+          );
           if (keyPair) {
             txb.sign({
               prevOutScriptType: utxo.type(),
@@ -49,12 +55,15 @@ function sign(wallet, txb, utxos) {
   });
 }
 exports.sign = sign;
-function keyForScript(wallet, script) {
+function keyForScript(wallet, script, options) {
   return __awaiter(this, void 0, void 0, function*() {
     const targetHash = outputToPubkeyHash(Buffer.from(script, 'hex'));
     const keys = yield wallet.keyStore.keys();
+    const network = (options || {}).network || tapyrus.networks.prod;
     return keys
-      .map(k => tapyrus.ECPair.fromPrivateKey(Buffer.from(k, 'hex')))
+      .map(k =>
+        tapyrus.ECPair.fromPrivateKey(Buffer.from(k, 'hex'), { network }),
+      )
       .find(keyPair => {
         const hash = tapyrus.payments.p2pkh({ pubkey: keyPair.publicKey }).hash;
         return hash.toString('hex') === targetHash.toString('hex');
