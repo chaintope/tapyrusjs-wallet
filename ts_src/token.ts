@@ -120,13 +120,13 @@ export class BaseToken {
   ): { sum: number; collected: Utxo[] } {
     let sum = 0;
     const collected: Utxo[] = [];
-    utxos.forEach(utxo => {
+    for (const utxo of utxos) {
       sum += utxo.value;
       collected.push(utxo);
       if (sum >= amount) {
-        return;
+        break;
       }
-    });
+    }
     if (sum >= amount) {
       return { sum, collected };
     } else {
