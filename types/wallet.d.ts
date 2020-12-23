@@ -14,7 +14,7 @@ export default interface Wallet {
     broadcast(tx: tapyrus.Transaction): Promise<string>;
     balance(colorId?: string): Promise<Balance>;
     utxos(colorId?: string): Promise<Utxo[]>;
-    estimatedFee(txSize: number): number;
+    estimatedFee(tx: tapyrus.Transaction): number;
 }
 export declare class BaseWallet implements Wallet {
     static COLOR_ID_FOR_TPC: string;
@@ -29,7 +29,7 @@ export declare class BaseWallet implements Wallet {
     broadcast(tx: tapyrus.Transaction): Promise<string>;
     balance(colorId?: string): Promise<Balance>;
     utxos(colorId?: string): Promise<Utxo[]>;
-    estimatedFee(txSize: number): number;
+    estimatedFee(tx: tapyrus.Transaction): number;
     private listUnspent;
     private privateToScriptHash;
 }

@@ -30,7 +30,7 @@ export default interface Wallet {
   utxos(colorId?: string): Promise<Utxo[]>;
 
   // Calculate fee for transaction
-  estimatedFee(txSize: number): number;
+  estimatedFee(tx: tapyrus.Transaction): number;
 }
 
 // Wallet Implementation
@@ -105,8 +105,8 @@ export class BaseWallet implements Wallet {
     return this.dataStore.utxosFor(keys, colorId);
   }
 
-  estimatedFee(txSize: number): number {
-    return txSize * this.config.feePerByte;
+  estimatedFee(tx: tapyrus.Transaction): number {
+    return this.config.feeProvider.fee(tx);
   }
 
   private async listUnspent(key: string): Promise<Utxo[]> {

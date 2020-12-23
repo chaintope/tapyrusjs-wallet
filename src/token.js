@@ -80,7 +80,7 @@ class BaseToken {
         }),
       );
       const uncoloredUtxos = yield wallet.utxos();
-      const fee = wallet.estimatedFee(this.transferTxSize());
+      const fee = wallet.estimatedFee(this.createDummyTransaction(txb));
       const { sum: sumTpc, collected: tpcs } = this.collect(
         uncoloredUtxos,
         fee,
@@ -130,43 +130,27 @@ class BaseToken {
       throw new Error('Insufficient Token');
     }
   }
-  //  Tx
-  //    Version no ... 4
-  //    In-counter ... 1
-  //    inputs ... 226
-  //        inputs[0] (Token input)
-  //            Previous Transaction hash  ... 32
-  //            Previous Txout-index ... 4
-  //            Txin-script length ... 1
-  //            scriptSig ... 72
-  //            sequence_no ... 4
-  //        inputs[1] (Tpc input)
-  //            Previous Transaction hash  ... 32
-  //            Previous Txout-index ... 4
-  //            Txin-script length ... 1
-  //            scriptSig ... 72
-  //            sequence_no ... 4
-  //    Out-counter ... 1
-  //    outputs ... 202
-  //        outputs[0] (Token output)
-  //            value ... 8
-  //            Txout-script length ... 1
-  //            scriptPubKey ... 60
-  //        outputs[1] (Token change)
-  //            value ... 8
-  //            Txout-script length ... 1
-  //            scriptPubKey ... 60
-  //        outputs[2] (Tpc output)
-  //            value ... 8
-  //            Txout-script length ... 1
-  //            scriptPubKey ... 25
-  //        outputs[3] (Tpc change)
-  //            value ... 8
-  //            Txout-script length ... 1
-  //            scriptPubKey ... 25
-  //    lock_time ... 4
-  transferTxSize() {
-    return 438;
+  createDummyTransaction(txb) {
+    const dummyTx = tapyrus.Transaction.fromBuffer(
+      txb.buildIncomplete().toBuffer(),
+    );
+    dummyTx.addInput(
+      Buffer.from(
+        '0000000000000000000000000000000000000000000000000000000000000000',
+        'hex',
+      ),
+      0,
+      0,
+      Buffer.from(
+        '000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000',
+        'hex',
+      ),
+    );
+    dummyTx.addOutput(
+      Buffer.from('76a914000000000000000000000000000000000000000088ac', 'hex'),
+      0,
+    );
+    return dummyTx;
   }
 }
 exports.BaseToken = BaseToken;

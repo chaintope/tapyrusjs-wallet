@@ -1,4 +1,5 @@
 import * as tapyrus from 'tapyrusjs-lib';
+import { FeeProvider } from './fee_provider';
 export declare class Config {
     schema: string;
     host?: string;
@@ -8,7 +9,7 @@ export declare class Config {
         [key: string]: string;
     };
     network: tapyrus.Network;
-    feePerByte: number;
+    feeProvider: FeeProvider;
     constructor(params: any);
     url(): string;
 }

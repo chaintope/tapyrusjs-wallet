@@ -13,6 +13,7 @@ import {
 import { BaseWallet } from '../src/wallet';
 
 import * as sinon from 'sinon';
+import { SizeBasedFeeProvider } from '../src/fee_provider';
 
 describe('Wallet', () => {
   afterEach(() => {
@@ -428,27 +429,27 @@ describe('Wallet', () => {
   describe('estimatedFee', () => {
     context('with default fee rate', () => {
       it('calculate default fee for tx', () => {
-        const txSize = 1;
+        const tx = new tapyrus.Transaction();
         const { wallet: alice } = createWallet('prod');
-        assert.strictEqual(alice.estimatedFee(txSize), 10);
+        assert.strictEqual(alice.estimatedFee(tx), 100);
       });
     });
 
     context('with configured fee rate', () => {
       it('calculate fee for tx', () => {
-        const txSize = 1;
+        const tx = new tapyrus.Transaction();
 
         const config = new Config({
           host: 'example.org',
           port: '50001',
           path: '/',
           network: 'prod',
-          feePerByte: 1,
+          feeProvider: new SizeBasedFeeProvider(30),
         });
         const keyStore = new LocalKeyStore(config.network);
         const dataStore = new LocalDataStore();
         const alice = new BaseWallet(keyStore, dataStore, config);
-        assert.strictEqual(alice.estimatedFee(txSize), 1);
+        assert.strictEqual(alice.estimatedFee(tx), 300);
       });
     });
   });
