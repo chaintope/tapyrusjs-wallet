@@ -117,13 +117,13 @@ class BaseToken {
   collect(utxos, amount) {
     let sum = 0;
     const collected = [];
-    utxos.forEach(utxo => {
+    for (const utxo of utxos) {
       sum += utxo.value;
       collected.push(utxo);
       if (sum >= amount) {
-        return;
+        break;
       }
-    });
+    }
     if (sum >= amount) {
       return { sum, collected };
     } else {
