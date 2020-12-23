@@ -36,7 +36,7 @@ const utxo_1 = require('../utxo');
 class CordovaDataStore {
   constructor() {
     this.database = sqlitePlugin.openDatabase({
-      name: 'db',
+      name: 'wallet.db',
       location: 'default',
       androidDatabaseProvider: 'system',
     });

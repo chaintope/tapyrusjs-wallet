@@ -12,7 +12,7 @@ export default class CordovaDataStore implements DataStore {
 
   constructor() {
     this.database = sqlitePlugin.openDatabase({
-      name: 'db',
+      name: 'wallet.db',
       location: 'default',
       androidDatabaseProvider: 'system',
     });
