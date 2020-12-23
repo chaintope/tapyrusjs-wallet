@@ -26,5 +26,5 @@ export declare class BaseToken {
     }>;
     private addressToOutput;
     private collect;
-    private transferTxSize;
+    private createDummyTransaction;
 }

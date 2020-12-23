@@ -100,8 +100,8 @@ class BaseWallet {
       return this.dataStore.utxosFor(keys, colorId);
     });
   }
-  estimatedFee(txSize) {
-    return txSize * this.config.feePerByte;
+  estimatedFee(tx) {
+    return this.config.feeProvider.fee(tx);
   }
   listUnspent(key) {
     return __awaiter(this, void 0, void 0, function*() {
