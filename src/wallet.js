@@ -78,10 +78,15 @@ class BaseWallet {
         });
     });
   }
-  broadcast(tx) {
+  broadcast(tx, options) {
     return __awaiter(this, void 0, void 0, function*() {
       const response = yield this.rpc
-        .request(this.config, 'blockchain.transaction.broadcast', [tx.toHex()])
+        .request(
+          this.config,
+          'blockchain.transaction.broadcast',
+          [tx.toHex()].concat((options || {}).params || []),
+          (options || {}).headers,
+        )
         .catch(reason => {
           throw new Error(reason);
         });
@@ -102,7 +107,7 @@ class BaseWallet {
       return this.dataStore.utxosFor(keys, colorId);
     });
   }
-  transfer(params, changePubkeyScript) {
+  transfer(params, changePubkeyScript, options) {
     return __awaiter(this, void 0, void 0, function*() {
       const txb = new tapyrus.TransactionBuilder();
       txb.setVersion(1);
@@ -154,7 +159,7 @@ class BaseWallet {
       txb.addOutput(uncoloredScript.output, sumTpc - fee);
       const signedTxb = yield signer_1.sign(this, txb, inputs);
       const tx = signedTxb.build();
-      yield this.broadcast(tx);
+      yield this.broadcast(tx, options);
       return tx;
     });
   }

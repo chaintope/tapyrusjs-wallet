@@ -255,6 +255,27 @@ describe('Wallet', () => {
         await alice.broadcast(tx);
         assert.strictEqual(spy.calledOnce, true);
       });
+
+      context('with options', () => {
+        it('should call rpc blockchain.transaction.broadcast with additional headers and parameters', async () => {
+          const stub = setUpStub(alice);
+          stub.onFirstCall().returns(new Promise(resolve => resolve(response)));
+          const options = {
+            headers: { Authorization: 'Bearer xxxx-xxxx-xxxx-xxxx' },
+            params: ['param1', 0, 1, {}],
+          };
+          await alice.broadcast(tx, options);
+          assert.strictEqual(
+            stub.calledOnceWith(
+              alice.config,
+              'blockchain.transaction.broadcast',
+              [tx.toHex(), 'param1', 0, 1, {}],
+              { Authorization: 'Bearer xxxx-xxxx-xxxx-xxxx' },
+            ),
+            true,
+          );
+        });
+      });
     });
 
     context('when RPC call failed', () => {

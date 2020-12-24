@@ -7,17 +7,24 @@ import { KeyStore } from './key_store';
 import { Rpc } from './rpc';
 import { TransferParams } from './token';
 import { Utxo } from './utxo';
+export interface BroadcastOptions {
+    headers?: {
+        [key: string]: string;
+    };
+    params?: any[];
+}
+export declare type TransferOptions = BroadcastOptions;
 export default interface Wallet {
     keyStore: KeyStore;
     dataStore: DataStore;
     importExtendedPrivateKey(key: string): Promise<void>;
     importWif(wif: string): Promise<void>;
     update(): Promise<void>;
-    broadcast(tx: tapyrus.Transaction): Promise<string>;
+    broadcast(tx: tapyrus.Transaction, options?: BroadcastOptions): Promise<string>;
     balance(colorId?: string): Promise<Balance>;
     utxos(colorId?: string): Promise<Utxo[]>;
     estimatedFee(tx: tapyrus.Transaction): number;
-    transfer(params: TransferParams[], changePubkeyScript: Buffer): Promise<tapyrus.Transaction>;
+    transfer(params: TransferParams[], changePubkeyScript: Buffer, options?: TransferOptions): Promise<tapyrus.Transaction>;
 }
 export declare class BaseWallet implements Wallet {
     static COLOR_ID_FOR_TPC: string;
@@ -29,10 +36,10 @@ export declare class BaseWallet implements Wallet {
     importExtendedPrivateKey(xpriv: string): Promise<void>;
     importWif(wif: string): Promise<void>;
     update(): Promise<void>;
-    broadcast(tx: tapyrus.Transaction): Promise<string>;
+    broadcast(tx: tapyrus.Transaction, options?: BroadcastOptions): Promise<string>;
     balance(colorId?: string): Promise<Balance>;
     utxos(colorId?: string): Promise<Utxo[]>;
-    transfer(params: TransferParams[], changePubkeyScript: Buffer): Promise<tapyrus.Transaction>;
+    transfer(params: TransferParams[], changePubkeyScript: Buffer, options?: TransferOptions): Promise<tapyrus.Transaction>;
     estimatedFee(tx: tapyrus.Transaction): number;
     private listUnspent;
     private privateToScriptHash;
