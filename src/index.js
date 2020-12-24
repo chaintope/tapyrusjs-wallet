@@ -8,5 +8,7 @@ const KeyStore = require('./key_store');
 exports.KeyStore = KeyStore;
 const Signer = require('./signer');
 exports.Signer = Signer;
+const token_1 = require('./token');
+exports.BaseToken = token_1.BaseToken;
 const Wallet = require('./wallet');
 exports.Wallet = Wallet;
