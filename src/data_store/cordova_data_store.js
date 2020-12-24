@@ -171,7 +171,7 @@ class CordovaDataStore {
       const scripts = util.keyToScript(keys, colorId);
       const inClause = scripts.map(s => "'" + s + "'").join(',');
       return new Promise((resolve, reject) => {
-        this.database.transaction(db => {
+        this.database.readTransaction(db => {
           db.executeSql(
             'SELECT * FROM utxos WHERE colorId = ?  AND scriptPubkey in (' +
               inClause +
