@@ -128,7 +128,7 @@ class CordovaDataStore {
       const inClause = scripts.map(s => "'" + s + "'").join(',');
       return Promise.all([
         new Promise((resolve, reject) => {
-          this.database.transaction(db => {
+          this.database.readTransaction(db => {
             db.executeSql(
               'SELECT SUM(value) as unconfirmed FROM utxos WHERE colorId = ? AND scriptPubkey in (' +
                 inClause +
@@ -144,7 +144,7 @@ class CordovaDataStore {
           });
         }),
         new Promise((resolve, reject) => {
-          this.database.transaction(db => {
+          this.database.readTransaction(db => {
             db.executeSql(
               'SELECT SUM(value) as confirmed FROM utxos WHERE colorId = ? AND scriptPubkey in (' +
                 inClause +
