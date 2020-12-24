@@ -1,5 +1,3 @@
-import * as tapyrus from 'tapyrusjs-lib';
-
 export class Utxo {
   txid: string;
   height: number;
@@ -22,11 +20,5 @@ export class Utxo {
     this.scriptPubkey = scriptPubkey;
     this.colorId = colorId;
     this.value = value;
-  }
-
-  address(): string {
-    return tapyrus.address.fromOutputScript(
-      Buffer.from(this.scriptPubkey, 'hex'),
-    );
   }
 }
