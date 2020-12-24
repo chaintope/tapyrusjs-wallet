@@ -156,7 +156,7 @@ export default class CordovaDataStore implements DataStore {
     const inClause = scripts.map(s => "'" + s + "'").join(',');
     return new Promise(
       (resolve, reject): void => {
-        this.database.transaction((db: any) => {
+        this.database.readTransaction((db: any) => {
           db.executeSql(
             'SELECT * FROM utxos WHERE colorId = ?  AND scriptPubkey in (' +
               inClause +
