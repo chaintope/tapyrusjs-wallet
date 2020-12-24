@@ -9,6 +9,12 @@ import { createDummyTransaction, TransferParams } from './token';
 import * as util from './util';
 import { Utxo } from './utxo';
 
+export interface BroadcastOptions {
+  headers?: { [key: string]: string };
+  params?: any[];
+}
+export type TransferOptions = BroadcastOptions;
+
 export default interface Wallet {
   keyStore: KeyStore;
   dataStore: DataStore;
@@ -23,7 +29,10 @@ export default interface Wallet {
   update(): Promise<void>;
 
   // Broadcast Transaction
-  broadcast(tx: tapyrus.Transaction): Promise<string>;
+  broadcast(
+    tx: tapyrus.Transaction,
+    options?: BroadcastOptions,
+  ): Promise<string>;
 
   // Return amount for the specified colorId
   balance(colorId?: string): Promise<Balance>;
@@ -38,6 +47,7 @@ export default interface Wallet {
   transfer(
     params: TransferParams[],
     changePubkeyScript: Buffer,
+    options?: TransferOptions,
   ): Promise<tapyrus.Transaction>;
 }
 
@@ -92,9 +102,17 @@ export class BaseWallet implements Wallet {
       });
   }
 
-  async broadcast(tx: tapyrus.Transaction): Promise<string> {
+  async broadcast(
+    tx: tapyrus.Transaction,
+    options?: BroadcastOptions,
+  ): Promise<string> {
     const response: any = await this.rpc
-      .request(this.config, 'blockchain.transaction.broadcast', [tx.toHex()])
+      .request(
+        this.config,
+        'blockchain.transaction.broadcast',
+        [tx.toHex()].concat((options || {}).params || []),
+        (options || {}).headers,
+      )
       .catch((reason: any) => {
         throw new Error(reason);
       });
@@ -116,12 +134,12 @@ export class BaseWallet implements Wallet {
   async transfer(
     params: TransferParams[],
     changePubkeyScript: Buffer,
+    options?: TransferOptions,
   ): Promise<tapyrus.Transaction> {
     const txb = new tapyrus.TransactionBuilder();
     txb.setVersion(1);
 
     const inputs: Utxo[] = [];
-
     const uncoloredScript = tapyrus.payments.p2pkh({
       output: changePubkeyScript,
     });
@@ -169,7 +187,7 @@ export class BaseWallet implements Wallet {
     txb.addOutput(uncoloredScript.output!, sumTpc - fee);
     const signedTxb = await sign(this, txb, inputs);
     const tx = signedTxb.build();
-    await this.broadcast(tx);
+    await this.broadcast(tx, options);
     return tx;
   }
 

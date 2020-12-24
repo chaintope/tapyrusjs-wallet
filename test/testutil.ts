@@ -104,8 +104,13 @@ export const createWallet = (
 
 export const setUpStub = (wallet: BaseWallet): sinon.SinonStub => {
   const stub = sinon.stub();
-  wallet.rpc.request = (config: Config, method: string, params: any[]) => {
-    return stub(config, method, params);
+  wallet.rpc.request = (
+    config: Config,
+    method: string,
+    params: any[],
+    headers?: any,
+  ) => {
+    return stub(config, method, params, headers);
   };
   return stub;
 };
