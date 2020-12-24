@@ -112,7 +112,7 @@ export default class CordovaDataStore implements DataStore {
     return Promise.all([
       new Promise(
         (resolve: (v: number) => void, reject): void => {
-          this.database.transaction((db: any) => {
+          this.database.readTransaction((db: any) => {
             db.executeSql(
               'SELECT SUM(value) as unconfirmed FROM utxos WHERE colorId = ? AND scriptPubkey in (' +
                 inClause +
@@ -130,7 +130,7 @@ export default class CordovaDataStore implements DataStore {
       ),
       new Promise(
         (resolve: (v: number) => void, reject): void => {
-          this.database.transaction((db: any) => {
+          this.database.readTransaction((db: any) => {
             db.executeSql(
               'SELECT SUM(value) as confirmed FROM utxos WHERE colorId = ? AND scriptPubkey in (' +
                 inClause +
