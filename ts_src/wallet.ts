@@ -4,6 +4,7 @@ import { Config } from './config';
 import { DataStore } from './data_store';
 import { KeyStore } from './key_store';
 import { Rpc } from './rpc';
+import { createDummyTransaction, TransferParams } from './token';
 import * as util from './util';
 import { Utxo } from './utxo';
 
@@ -31,6 +32,15 @@ export default interface Wallet {
 
   // Calculate fee for transaction
   estimatedFee(tx: tapyrus.Transaction): number;
+
+  // Send token
+  transfer(
+    params: TransferParams[],
+    changePubkeyScript: Buffer,
+  ): Promise<{
+    txb: tapyrus.TransactionBuilder;
+    inputs: Utxo[];
+  }>;
 }
 
 // Wallet Implementation
@@ -105,6 +115,66 @@ export class BaseWallet implements Wallet {
     return this.dataStore.utxosFor(keys, colorId);
   }
 
+  async transfer(
+    params: TransferParams[],
+    changePubkeyScript: Buffer,
+  ): Promise<{
+    txb: tapyrus.TransactionBuilder;
+    inputs: Utxo[];
+  }> {
+    const txb = new tapyrus.TransactionBuilder();
+    txb.setVersion(1);
+
+    const inputs: Utxo[] = [];
+
+    const uncoloredScript = tapyrus.payments.p2pkh({
+      output: changePubkeyScript,
+    });
+
+    for (const param of params) {
+      const coloredUtxos = await this.utxos(param.colorId);
+      const { sum: sumToken, collected: tokens } = this.collect(
+        coloredUtxos,
+        param.amount,
+      );
+      const coloredScript: Buffer = this.addressToOutput(
+        param.toAddress,
+        Buffer.from(param.colorId, 'hex'),
+      );
+
+      const changeColoredScript: Buffer = tapyrus.payments.cp2pkh({
+        hash: uncoloredScript.hash,
+        colorId: Buffer.from(param.colorId, 'hex'),
+      }).output!;
+      tokens.map((utxo: Utxo) => {
+        txb.addInput(
+          utxo.txid,
+          utxo.index,
+          undefined,
+          Buffer.from(utxo.scriptPubkey, 'hex'),
+        );
+        inputs.push(utxo);
+      });
+      txb.addOutput(coloredScript, param.amount);
+      txb.addOutput(changeColoredScript, sumToken - param.amount);
+    }
+
+    const uncoloredUtxos = await this.utxos();
+    const fee = this.estimatedFee(createDummyTransaction(txb));
+    const { sum: sumTpc, collected: tpcs } = this.collect(uncoloredUtxos, fee);
+    tpcs.map((utxo: Utxo) => {
+      txb.addInput(
+        utxo.txid,
+        utxo.index,
+        undefined,
+        Buffer.from(utxo.scriptPubkey, 'hex'),
+      );
+      inputs.push(utxo);
+    });
+    txb.addOutput(uncoloredScript.output!, sumTpc - fee);
+    return { txb, inputs };
+  }
+
   estimatedFee(tx: tapyrus.Transaction): number {
     return this.config.feeProvider.fee(tx);
   }
@@ -155,5 +225,46 @@ export class BaseWallet implements Wallet {
       pubkey: pair.publicKey,
     });
     return [p2pkh, tapyrus.crypto.sha256(p2pkh.output!).reverse()];
+  }
+
+  // convert address to buffer of scriptPubkey
+  private addressToOutput(
+    address: string,
+    colorId: Buffer | undefined,
+  ): Buffer {
+    if (colorId) {
+      try {
+        return tapyrus.payments.cp2pkh({ address }).output!;
+      } catch (e) {}
+      try {
+        const hash = tapyrus.payments.p2pkh({ address }).hash!;
+        return tapyrus.payments.cp2pkh({ hash, colorId }).output!;
+      } catch (e) {}
+    } else {
+      try {
+        return tapyrus.payments.p2pkh({ address }).output!;
+      } catch (e) {}
+    }
+    throw new Error('Invalid address type.');
+  }
+
+  private collect(
+    utxos: Utxo[],
+    amount: number,
+  ): { sum: number; collected: Utxo[] } {
+    let sum = 0;
+    const collected: Utxo[] = [];
+    for (const utxo of utxos) {
+      sum += utxo.value;
+      collected.push(utxo);
+      if (sum >= amount) {
+        break;
+      }
+    }
+    if (sum >= amount) {
+      return { sum, collected };
+    } else {
+      throw new Error('Insufficient Token');
+    }
   }
 }
