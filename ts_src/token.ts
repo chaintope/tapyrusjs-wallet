@@ -50,7 +50,8 @@ export class BaseToken {
     const uncoloredScript = tapyrus.payments.p2pkh({
       output: changePubkeyScript,
     });
-    params.forEach(async param => {
+
+    for (const param of params) {
       const coloredUtxos = await wallet.utxos(param.colorId);
       const { sum: sumToken, collected: tokens } = this.collect(
         coloredUtxos,
@@ -76,7 +77,7 @@ export class BaseToken {
       });
       txb.addOutput(coloredScript, param.amount);
       txb.addOutput(changeColoredScript, sumToken - param.amount);
-    });
+    }
 
     const uncoloredUtxos = await wallet.utxos();
     const fee = wallet.estimatedFee(this.createDummyTransaction(txb));
