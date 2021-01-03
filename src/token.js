@@ -51,34 +51,32 @@ class BaseToken {
       const uncoloredScript = tapyrus.payments.p2pkh({
         output: changePubkeyScript,
       });
-      params.forEach(param =>
-        __awaiter(this, void 0, void 0, function*() {
-          const coloredUtxos = yield wallet.utxos(param.colorId);
-          const { sum: sumToken, collected: tokens } = this.collect(
-            coloredUtxos,
-            param.amount,
+      for (const param of params) {
+        const coloredUtxos = yield wallet.utxos(param.colorId);
+        const { sum: sumToken, collected: tokens } = this.collect(
+          coloredUtxos,
+          param.amount,
+        );
+        const coloredScript = this.addressToOutput(
+          param.toAddress,
+          Buffer.from(param.colorId, 'hex'),
+        );
+        const changeColoredScript = tapyrus.payments.cp2pkh({
+          hash: uncoloredScript.hash,
+          colorId: Buffer.from(param.colorId, 'hex'),
+        }).output;
+        tokens.map(utxo => {
+          txb.addInput(
+            utxo.txid,
+            utxo.index,
+            undefined,
+            Buffer.from(utxo.scriptPubkey, 'hex'),
           );
-          const coloredScript = this.addressToOutput(
-            param.toAddress,
-            Buffer.from(param.colorId, 'hex'),
-          );
-          const changeColoredScript = tapyrus.payments.cp2pkh({
-            hash: uncoloredScript.hash,
-            colorId: Buffer.from(param.colorId, 'hex'),
-          }).output;
-          tokens.map(utxo => {
-            txb.addInput(
-              utxo.txid,
-              utxo.index,
-              undefined,
-              Buffer.from(utxo.scriptPubkey, 'hex'),
-            );
-            inputs.push(utxo);
-          });
-          txb.addOutput(coloredScript, param.amount);
-          txb.addOutput(changeColoredScript, sumToken - param.amount);
-        }),
-      );
+          inputs.push(utxo);
+        });
+        txb.addOutput(coloredScript, param.amount);
+        txb.addOutput(changeColoredScript, sumToken - param.amount);
+      }
       const uncoloredUtxos = yield wallet.utxos();
       const fee = wallet.estimatedFee(this.createDummyTransaction(txb));
       const { sum: sumTpc, collected: tpcs } = this.collect(
