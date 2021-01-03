@@ -30,6 +30,7 @@ var __awaiter =
 Object.defineProperty(exports, '__esModule', { value: true });
 const tapyrus = require('tapyrusjs-lib');
 const rpc_1 = require('./rpc');
+const token_1 = require('./token');
 const util = require('./util');
 const utxo_1 = require('./utxo');
 // Wallet Implementation
@@ -100,6 +101,59 @@ class BaseWallet {
       return this.dataStore.utxosFor(keys, colorId);
     });
   }
+  transfer(params, changePubkeyScript) {
+    return __awaiter(this, void 0, void 0, function*() {
+      const txb = new tapyrus.TransactionBuilder();
+      txb.setVersion(1);
+      const inputs = [];
+      const uncoloredScript = tapyrus.payments.p2pkh({
+        output: changePubkeyScript,
+      });
+      for (const param of params) {
+        const coloredUtxos = yield this.utxos(param.colorId);
+        const { sum: sumToken, collected: tokens } = this.collect(
+          coloredUtxos,
+          param.amount,
+        );
+        const coloredScript = this.addressToOutput(
+          param.toAddress,
+          Buffer.from(param.colorId, 'hex'),
+        );
+        const changeColoredScript = tapyrus.payments.cp2pkh({
+          hash: uncoloredScript.hash,
+          colorId: Buffer.from(param.colorId, 'hex'),
+        }).output;
+        tokens.map(utxo => {
+          txb.addInput(
+            utxo.txid,
+            utxo.index,
+            undefined,
+            Buffer.from(utxo.scriptPubkey, 'hex'),
+          );
+          inputs.push(utxo);
+        });
+        txb.addOutput(coloredScript, param.amount);
+        txb.addOutput(changeColoredScript, sumToken - param.amount);
+      }
+      const uncoloredUtxos = yield this.utxos();
+      const fee = this.estimatedFee(token_1.createDummyTransaction(txb));
+      const { sum: sumTpc, collected: tpcs } = this.collect(
+        uncoloredUtxos,
+        fee,
+      );
+      tpcs.map(utxo => {
+        txb.addInput(
+          utxo.txid,
+          utxo.index,
+          undefined,
+          Buffer.from(utxo.scriptPubkey, 'hex'),
+        );
+        inputs.push(utxo);
+      });
+      txb.addOutput(uncoloredScript.output, sumTpc - fee);
+      return { txb, inputs };
+    });
+  }
   estimatedFee(tx) {
     return this.config.feeProvider.fee(tx);
   }
@@ -147,6 +201,38 @@ class BaseWallet {
       pubkey: pair.publicKey,
     });
     return [p2pkh, tapyrus.crypto.sha256(p2pkh.output).reverse()];
+  }
+  addressToOutput(address, colorId) {
+    if (colorId) {
+      try {
+        return tapyrus.payments.cp2pkh({ address }).output;
+      } catch (e) {}
+      try {
+        const hash = tapyrus.payments.p2pkh({ address }).hash;
+        return tapyrus.payments.cp2pkh({ hash, colorId }).output;
+      } catch (e) {}
+    } else {
+      try {
+        return tapyrus.payments.p2pkh({ address }).output;
+      } catch (e) {}
+    }
+    throw new Error('Invalid address type.');
+  }
+  collect(utxos, amount) {
+    let sum = 0;
+    const collected = [];
+    for (const utxo of utxos) {
+      sum += utxo.value;
+      collected.push(utxo);
+      if (sum >= amount) {
+        break;
+      }
+    }
+    if (sum >= amount) {
+      return { sum, collected };
+    } else {
+      throw new Error('Insufficient Token');
+    }
   }
 }
 BaseWallet.COLOR_ID_FOR_TPC =
