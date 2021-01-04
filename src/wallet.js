@@ -202,6 +202,7 @@ class BaseWallet {
     });
     return [p2pkh, tapyrus.crypto.sha256(p2pkh.output).reverse()];
   }
+  // convert address to buffer of scriptPubkey
   addressToOutput(address, colorId) {
     if (colorId) {
       try {
