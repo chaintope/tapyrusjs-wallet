@@ -492,13 +492,17 @@ describe('Wallet', () => {
       '76a914e18c333242b4d4ecbdc9b7071743b5bce53ea0ad88ac',
       'hex',
     );
+    const response =
+      '9b9ebcb5bb47bf78b94fd696186926abc1daf756d833e90268d97fc1b370eca7';
 
     describe('transfer single token', () => {
       it('should build transaction', async () => {
         const { wallet: alice, dataStore } = createWallet('prod');
+        const stub = setUpStub(alice);
+        stub.onFirstCall().returns(new Promise(resolve => resolve(response)));
         await alice.importWif(wif);
         await dataStore.add(utxos);
-        const result = await alice.transfer(
+        const tx = await alice.transfer(
           [
             {
               colorId: colorId1,
@@ -508,8 +512,6 @@ describe('Wallet', () => {
           ],
           changePubkeyScript,
         );
-        const tx = result.txb.buildIncomplete();
-        console.log(tx);
         assert.strictEqual(tx.ins.length, 2);
         assert.strictEqual(tx.outs.length, 3);
       });
@@ -518,9 +520,11 @@ describe('Wallet', () => {
     describe('transfer multiple token', () => {
       it('should build transaction', async () => {
         const { wallet: alice, dataStore } = createWallet('prod');
+        const stub = setUpStub(alice);
+        stub.onFirstCall().returns(new Promise(resolve => resolve(response)));
         await alice.importWif(wif);
         await dataStore.add(utxos);
-        const result = await alice.transfer(
+        const tx = await alice.transfer(
           [
             {
               colorId: colorId1,
@@ -535,8 +539,6 @@ describe('Wallet', () => {
           ],
           changePubkeyScript,
         );
-        const tx = result.txb.buildIncomplete();
-        console.log(tx);
         assert.strictEqual(tx.ins.length, 3);
         assert.strictEqual(tx.outs.length, 5);
       });

@@ -30,6 +30,7 @@ var __awaiter =
 Object.defineProperty(exports, '__esModule', { value: true });
 const tapyrus = require('tapyrusjs-lib');
 const rpc_1 = require('./rpc');
+const signer_1 = require('./signer');
 const token_1 = require('./token');
 const util = require('./util');
 const utxo_1 = require('./utxo');
@@ -151,7 +152,10 @@ class BaseWallet {
         inputs.push(utxo);
       });
       txb.addOutput(uncoloredScript.output, sumTpc - fee);
-      return { txb, inputs };
+      const signedTxb = yield signer_1.sign(this, txb, inputs);
+      const tx = signedTxb.build();
+      yield this.broadcast(tx);
+      return tx;
     });
   }
   estimatedFee(tx) {
