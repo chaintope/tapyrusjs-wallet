@@ -4,6 +4,7 @@ import { Config } from './config';
 import { DataStore } from './data_store';
 import { KeyStore } from './key_store';
 import { Rpc } from './rpc';
+import { sign } from './signer';
 import { createDummyTransaction, TransferParams } from './token';
 import * as util from './util';
 import { Utxo } from './utxo';
@@ -37,10 +38,7 @@ export default interface Wallet {
   transfer(
     params: TransferParams[],
     changePubkeyScript: Buffer,
-  ): Promise<{
-    txb: tapyrus.TransactionBuilder;
-    inputs: Utxo[];
-  }>;
+  ): Promise<tapyrus.Transaction>;
 }
 
 // Wallet Implementation
@@ -118,10 +116,7 @@ export class BaseWallet implements Wallet {
   async transfer(
     params: TransferParams[],
     changePubkeyScript: Buffer,
-  ): Promise<{
-    txb: tapyrus.TransactionBuilder;
-    inputs: Utxo[];
-  }> {
+  ): Promise<tapyrus.Transaction> {
     const txb = new tapyrus.TransactionBuilder();
     txb.setVersion(1);
 
@@ -172,7 +167,10 @@ export class BaseWallet implements Wallet {
       inputs.push(utxo);
     });
     txb.addOutput(uncoloredScript.output!, sumTpc - fee);
-    return { txb, inputs };
+    const signedTxb = await sign(this, txb, inputs);
+    const tx = signedTxb.build();
+    await this.broadcast(tx);
+    return tx;
   }
 
   estimatedFee(tx: tapyrus.Transaction): number {
