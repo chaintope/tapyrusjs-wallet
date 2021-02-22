@@ -2,14 +2,11 @@ import * as assert from 'assert';
 import { describe, it } from 'mocha';
 
 import { Config } from '../src/config';
+import LocalDataStore from '../src/data_store/local_data_store';
+import LocalKeyStore from '../src/key_store/local_key_store';
 import { Utxo } from '../src/utxo';
 import * as tapyrus from 'tapyrusjs-lib';
-import {
-  createWallet,
-  setUpStub,
-  LocalDataStore,
-  LocalKeyStore,
-} from './testutil';
+import { createWallet, setUpStub } from './testutil';
 import { BaseWallet } from '../src/wallet';
 
 import * as sinon from 'sinon';
