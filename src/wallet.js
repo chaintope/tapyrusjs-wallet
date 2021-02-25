@@ -1,33 +1,6 @@
 'use strict';
-var __awaiter =
-  (this && this.__awaiter) ||
-  function(thisArg, _arguments, P, generator) {
-    return new (P || (P = Promise))(function(resolve, reject) {
-      function fulfilled(value) {
-        try {
-          step(generator.next(value));
-        } catch (e) {
-          reject(e);
-        }
-      }
-      function rejected(value) {
-        try {
-          step(generator['throw'](value));
-        } catch (e) {
-          reject(e);
-        }
-      }
-      function step(result) {
-        result.done
-          ? resolve(result.value)
-          : new P(function(resolve) {
-              resolve(result.value);
-            }).then(fulfilled, rejected);
-      }
-      step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-  };
 Object.defineProperty(exports, '__esModule', { value: true });
+const tslib_1 = require('tslib');
 const tapyrus = require('tapyrusjs-lib');
 const rpc_1 = require('./rpc');
 const signer_1 = require('./signer');
@@ -43,7 +16,7 @@ class BaseWallet {
     this.rpc = new rpc_1.Rpc();
   }
   importExtendedPrivateKey(xpriv) {
-    return __awaiter(this, void 0, void 0, function*() {
+    return tslib_1.__awaiter(this, void 0, void 0, function*() {
       const restored = tapyrus.bip32.fromBase58(xpriv, this.config.network);
       const result = yield util.belongsToPrivateKeys(
         this.keyStore,
@@ -56,7 +29,7 @@ class BaseWallet {
     });
   }
   importWif(wif) {
-    return __awaiter(this, void 0, void 0, function*() {
+    return tslib_1.__awaiter(this, void 0, void 0, function*() {
       const keyPair = tapyrus.ECPair.fromWIF(wif, this.config.network);
       const result = yield util.belongsToPrivateKeys(
         this.keyStore,
@@ -69,7 +42,7 @@ class BaseWallet {
     });
   }
   update() {
-    return __awaiter(this, void 0, void 0, function*() {
+    return tslib_1.__awaiter(this, void 0, void 0, function*() {
       const keys = yield this.keyStore.keys();
       return Promise.all(keys.map(key => this.listUnspent(key).catch(_r => [])))
         .then(utxos => utxos.reduce((acc, val) => acc.concat(val), []))
@@ -79,7 +52,7 @@ class BaseWallet {
     });
   }
   broadcast(tx, options) {
-    return __awaiter(this, void 0, void 0, function*() {
+    return tslib_1.__awaiter(this, void 0, void 0, function*() {
       const response = yield this.rpc
         .request(
           this.config,
@@ -96,19 +69,19 @@ class BaseWallet {
     });
   }
   balance(colorId) {
-    return __awaiter(this, void 0, void 0, function*() {
+    return tslib_1.__awaiter(this, void 0, void 0, function*() {
       const keys = yield this.keyStore.keys();
       return this.dataStore.balanceFor(keys, colorId);
     });
   }
   utxos(colorId) {
-    return __awaiter(this, void 0, void 0, function*() {
+    return tslib_1.__awaiter(this, void 0, void 0, function*() {
       const keys = yield this.keyStore.keys();
       return this.dataStore.utxosFor(keys, colorId);
     });
   }
   transfer(params, changePubkeyScript, options) {
-    return __awaiter(this, void 0, void 0, function*() {
+    return tslib_1.__awaiter(this, void 0, void 0, function*() {
       const txb = new tapyrus.TransactionBuilder();
       txb.setVersion(1);
       const inputs = [];
@@ -167,7 +140,7 @@ class BaseWallet {
     return this.config.feeProvider.fee(tx);
   }
   listUnspent(key) {
-    return __awaiter(this, void 0, void 0, function*() {
+    return tslib_1.__awaiter(this, void 0, void 0, function*() {
       const [p2pkh, scripthash] = this.privateToScriptHash(
         Buffer.from(key, 'hex'),
       );
