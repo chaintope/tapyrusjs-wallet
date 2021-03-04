@@ -17,9 +17,12 @@ const rpcOptions = (config, data, headers) => {
   };
 };
 class Rpc {
+  constructor() {
+    this.counter = 0;
+  }
   request(config, method, params, headers) {
     return tslib_1.__awaiter(this, void 0, void 0, function*() {
-      const data = { jsonrpc: '2.0', method, params };
+      const data = { jsonrpc: '2.0', method, params, id: ++this.counter };
       const response = yield fetch(
         config.url(),
         rpcOptions(config, data, headers),

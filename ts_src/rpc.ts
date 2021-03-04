@@ -16,13 +16,20 @@ const rpcOptions = (config: Config, data: any, headers?: any): RequestInit => {
   };
 };
 export class Rpc {
+  // The number of published requests
+  counter: number;
+
+  constructor() {
+    this.counter = 0;
+  }
+
   async request(
     config: Config,
     method: string,
     params: any[],
     headers?: any,
   ): Promise<any> {
-    const data = { jsonrpc: '2.0', method, params };
+    const data = { jsonrpc: '2.0', method, params, id: ++this.counter };
     const response = await fetch(
       config.url(),
       rpcOptions(config, data, headers),
