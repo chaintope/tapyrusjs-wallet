@@ -24,7 +24,10 @@ class Rpc {
         config.url(),
         rpcOptions(config, data, headers),
       ).then(r => r.json());
-      return response;
+      if (response.error) {
+        throw new Error(JSON.stringify(response.error));
+      }
+      return response.result;
     });
   }
 }
