@@ -11,7 +11,8 @@
     ],
     "types": [
       "node",
-      "mocha"
+      "mocha",
+      "isomorphic-fetch"
     ],
     "allowJs": false,
     "resolveJsonModule": true,
