@@ -67,9 +67,9 @@
     "nyc": "^15.0.0",
     "prettier": "1.16.4",
     "proxyquire": "^2.0.1",
-    "tapyrusjs-regtest-client": "https://github.com/Yamaguchi/tapyrusjs-regtest-client#5c77b2c0e618e7e367d0f7d291c6c11de3f6ccb3",
     "rimraf": "^2.6.3",
     "sinon": "^9.2.1",
+    "tapyrusjs-client": "https://github.com/chaintope/tapyrusjs-client",
     "ts-node": "^8.3.0",
     "tslint": "^5.20.1",
     "typescript": "3.2.2"
