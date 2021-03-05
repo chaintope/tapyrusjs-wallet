@@ -20,10 +20,15 @@ class Rpc {
   constructor() {
     this.counter = 0;
   }
+  fetch(url, options) {
+    return tslib_1.__awaiter(this, void 0, void 0, function*() {
+      return fetch(url, options);
+    });
+  }
   request(config, method, params, headers) {
     return tslib_1.__awaiter(this, void 0, void 0, function*() {
       const data = { jsonrpc: '2.0', method, params, id: ++this.counter };
-      const response = yield fetch(
+      const response = yield this.fetch(
         config.url(),
         rpcOptions(config, data, headers),
       ).then(r => r.json());

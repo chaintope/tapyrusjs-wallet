@@ -23,6 +23,10 @@ export class Rpc {
     this.counter = 0;
   }
 
+  async fetch(url: string, options?: any): Promise<Response> {
+    return fetch(url, options);
+  }
+
   async request(
     config: Config,
     method: string,
@@ -30,7 +34,7 @@ export class Rpc {
     headers?: any,
   ): Promise<any> {
     const data = { jsonrpc: '2.0', method, params, id: ++this.counter };
-    const response = await fetch(
+    const response = await this.fetch(
       config.url(),
       rpcOptions(config, data, headers),
     ).then((r: Response) => r.json());
