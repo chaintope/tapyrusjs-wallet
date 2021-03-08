@@ -11,7 +11,9 @@
     ],
     "types": [
       "node",
-      "mocha"
+      "mocha",
+      "isomorphic-fetch",
+      "sinon"
     ],
     "allowJs": false,
     "resolveJsonModule": true,
