@@ -1,4 +1,3 @@
-/// <reference types="node" />
 import { Balance } from './balance';
 import { KeyStore } from './key_store';
 import { Utxo } from './utxo';

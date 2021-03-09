@@ -1,4 +1,3 @@
-/// <reference types="node" />
 import * as tapyrus from 'tapyrusjs-lib';
 import { Balance } from './balance';
 import { Config } from './config';

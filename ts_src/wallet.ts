@@ -142,6 +142,7 @@ export class BaseWallet implements Wallet {
     const inputs: Utxo[] = [];
     const uncoloredScript = tapyrus.payments.p2pkh({
       output: changePubkeyScript,
+      network: this.config.network,
     });
 
     for (const param of params) {
@@ -153,11 +154,13 @@ export class BaseWallet implements Wallet {
       const coloredScript: Buffer = this.addressToOutput(
         param.toAddress,
         Buffer.from(param.colorId, 'hex'),
+        this.config.network,
       );
 
       const changeColoredScript: Buffer = tapyrus.payments.cp2pkh({
         hash: uncoloredScript.hash,
         colorId: Buffer.from(param.colorId, 'hex'),
+        network: this.config.network,
       }).output!;
       tokens.map((utxo: Utxo) => {
         txb.addInput(
@@ -210,6 +213,7 @@ export class BaseWallet implements Wallet {
         const cp2pkh = tapyrus.payments.cp2pkh({
           pubkey: p2pkh.pubkey,
           colorId: Buffer.from(r.color_id, 'hex'),
+          network: this.config.network,
         });
         return new Utxo(
           r.tx_hash,
@@ -247,18 +251,19 @@ export class BaseWallet implements Wallet {
   private addressToOutput(
     address: string,
     colorId: Buffer | undefined,
+    network?: tapyrus.Network,
   ): Buffer {
     if (colorId) {
       try {
-        return tapyrus.payments.cp2pkh({ address }).output!;
+        return tapyrus.payments.cp2pkh({ address, network }).output!;
       } catch (e) {}
       try {
-        const hash = tapyrus.payments.p2pkh({ address }).hash!;
-        return tapyrus.payments.cp2pkh({ hash, colorId }).output!;
+        const hash = tapyrus.payments.p2pkh({ address, network }).hash!;
+        return tapyrus.payments.cp2pkh({ hash, colorId, network }).output!;
       } catch (e) {}
     } else {
       try {
-        return tapyrus.payments.p2pkh({ address }).output!;
+        return tapyrus.payments.p2pkh({ address, network }).output!;
       } catch (e) {}
     }
     throw new Error('Invalid address type.');

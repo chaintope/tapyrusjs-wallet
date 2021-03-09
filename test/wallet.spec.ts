@@ -223,6 +223,21 @@ describe('Wallet', () => {
       await alice.update();
       assert.deepStrictEqual(dataStore.utxos, expected2);
     });
+
+    context('in dev mode', async () => {
+      it('save utxos', async () => {
+        const { wallet: alice, dataStore } = createWallet('dev');
+        const stub = setUpStub(alice);
+        stub.onFirstCall().returns(new Promise(resolve => resolve(unspents1)));
+        stub.onSecondCall().returns(new Promise(resolve => resolve(unspents2)));
+        const wif = 'cQfXnqdEfpbUkE1e32fmWinhh8yqQNTcsNo5krJaECZ2ythpGjvB';
+        await alice.importWif(wif);
+        await alice.update();
+        assert.deepStrictEqual(dataStore.utxos, expected1);
+        await alice.update();
+        assert.deepStrictEqual(dataStore.utxos, expected2);
+      });
+    });
   });
 
   describe('broadcast', () => {
@@ -559,6 +574,31 @@ describe('Wallet', () => {
         );
         assert.strictEqual(tx.ins.length, 3);
         assert.strictEqual(tx.outs.length, 5);
+      });
+    });
+
+    context('in dev mode', () => {
+      it('should build transaction', async () => {
+        const wif = 'cQfXnqdEfpbUkE1e32fmWinhh8yqQNTcsNo5krJaECZ2ythpGjvB';
+        const toAddress = 'mgzNrcFzjYwiQwjL8QGaCJVzkWdc7uH3hL';
+
+        const { wallet: alice, dataStore } = createWallet('dev');
+        const stub = setUpStub(alice);
+        stub.onFirstCall().returns(new Promise(resolve => resolve(response)));
+        await alice.importWif(wif);
+        await dataStore.add(utxos);
+        const tx = await alice.transfer(
+          [
+            {
+              colorId: colorId1,
+              amount: amount,
+              toAddress: toAddress,
+            },
+          ],
+          changePubkeyScript,
+        );
+        assert.strictEqual(tx.ins.length, 2);
+        assert.strictEqual(tx.outs.length, 3);
       });
     });
   });
