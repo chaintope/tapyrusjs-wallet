@@ -87,6 +87,7 @@ class BaseWallet {
       const inputs = [];
       const uncoloredScript = tapyrus.payments.p2pkh({
         output: changePubkeyScript,
+        network: this.config.network,
       });
       for (const param of params) {
         const coloredUtxos = yield this.utxos(param.colorId);
@@ -97,10 +98,12 @@ class BaseWallet {
         const coloredScript = this.addressToOutput(
           param.toAddress,
           Buffer.from(param.colorId, 'hex'),
+          this.config.network,
         );
         const changeColoredScript = tapyrus.payments.cp2pkh({
           hash: uncoloredScript.hash,
           colorId: Buffer.from(param.colorId, 'hex'),
+          network: this.config.network,
         }).output;
         tokens.map(utxo => {
           txb.addInput(
@@ -154,6 +157,7 @@ class BaseWallet {
           const cp2pkh = tapyrus.payments.cp2pkh({
             pubkey: p2pkh.pubkey,
             colorId: Buffer.from(r.color_id, 'hex'),
+            network: this.config.network,
           });
           return new utxo_1.Utxo(
             r.tx_hash,
@@ -185,18 +189,18 @@ class BaseWallet {
     return [p2pkh, tapyrus.crypto.sha256(p2pkh.output).reverse()];
   }
   // convert address to buffer of scriptPubkey
-  addressToOutput(address, colorId) {
+  addressToOutput(address, colorId, network) {
     if (colorId) {
       try {
-        return tapyrus.payments.cp2pkh({ address }).output;
+        return tapyrus.payments.cp2pkh({ address, network }).output;
       } catch (e) {}
       try {
-        const hash = tapyrus.payments.p2pkh({ address }).hash;
-        return tapyrus.payments.cp2pkh({ hash, colorId }).output;
+        const hash = tapyrus.payments.p2pkh({ address, network }).hash;
+        return tapyrus.payments.cp2pkh({ hash, colorId, network }).output;
       } catch (e) {}
     } else {
       try {
-        return tapyrus.payments.p2pkh({ address }).output;
+        return tapyrus.payments.p2pkh({ address, network }).output;
       } catch (e) {}
     }
     throw new Error('Invalid address type.');

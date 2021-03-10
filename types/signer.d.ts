@@ -1,4 +1,3 @@
-/// <reference types="node" />
 import * as tapyrus from 'tapyrusjs-lib';
 import { Utxo } from './utxo';
 import Wallet from './wallet';
