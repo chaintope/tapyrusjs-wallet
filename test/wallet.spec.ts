@@ -601,5 +601,27 @@ describe('Wallet', () => {
         assert.strictEqual(tx.outs.length, 3);
       });
     });
+
+    describe('transfer uncolored tpc', () => {
+      it('should build transaction', async () => {
+        const { wallet: alice, dataStore } = createWallet('prod');
+        const stub = setUpStub(alice);
+        stub.onFirstCall().returns(new Promise(resolve => resolve(response)));
+        await alice.importWif(wif);
+        await dataStore.add(utxos);
+        const tx = await alice.transfer(
+          [
+            {
+              colorId: BaseWallet.COLOR_ID_FOR_TPC,
+              amount: amount,
+              toAddress: toAddress,
+            },
+          ],
+          changePubkeyScript,
+        );
+        assert.strictEqual(tx.ins.length, 1);
+        assert.strictEqual(tx.outs.length, 2);
+      });
+    });
   });
 });

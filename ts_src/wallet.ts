@@ -145,7 +145,10 @@ export class BaseWallet implements Wallet {
       network: this.config.network,
     });
 
-    for (const param of params) {
+    const coloredParams = params.filter(
+      p => p.colorId !== BaseWallet.COLOR_ID_FOR_TPC,
+    );
+    for (const param of coloredParams) {
       const coloredUtxos = await this.utxos(param.colorId);
       const { sum: sumToken, collected: tokens } = this.collect(
         coloredUtxos,
@@ -175,9 +178,18 @@ export class BaseWallet implements Wallet {
       txb.addOutput(changeColoredScript, sumToken - param.amount);
     }
 
+    const uncoloredParams = params.filter(
+      p => p.colorId === BaseWallet.COLOR_ID_FOR_TPC,
+    );
     const uncoloredUtxos = await this.utxos();
     const fee = this.estimatedFee(createDummyTransaction(txb));
-    const { sum: sumTpc, collected: tpcs } = this.collect(uncoloredUtxos, fee);
+
+    const tpc = uncoloredParams.reduce((sum, param) => sum + param.amount, 0);
+    const { sum: sumTpc, collected: tpcs } = this.collect(
+      uncoloredUtxos,
+      tpc + fee,
+    );
+
     tpcs.map((utxo: Utxo) => {
       txb.addInput(
         utxo.txid,
@@ -187,7 +199,16 @@ export class BaseWallet implements Wallet {
       );
       inputs.push(utxo);
     });
-    txb.addOutput(uncoloredScript.output!, sumTpc - fee);
+    for (const param of uncoloredParams) {
+      const script: Buffer = this.addressToOutput(
+        param.toAddress,
+        Buffer.from(param.colorId, 'hex'),
+        this.config.network,
+      );
+      txb.addOutput(script, param.amount);
+    }
+    txb.addOutput(uncoloredScript.output!, sumTpc - tpc - fee);
+
     const signedTxb = await sign(this, txb, inputs);
     const tx = signedTxb.build();
     await this.broadcast(tx, options);

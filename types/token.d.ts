@@ -3,7 +3,7 @@ export declare class TransferParams {
     colorId: string;
     amount: number;
     toAddress: string;
-    constructor(colorId: string, amount: number, toAddress: string);
+    constructor(colorId: string | undefined, amount: number, toAddress: string);
 }
 export declare const TokenTypes: {
     REISSUBALE: number;
