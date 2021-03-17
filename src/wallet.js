@@ -205,7 +205,7 @@ class BaseWallet {
   }
   // convert address to buffer of scriptPubkey
   addressToOutput(address, colorId, network) {
-    if (colorId) {
+    if (colorId && colorId.toString('hex') !== BaseWallet.COLOR_ID_FOR_TPC) {
       try {
         return tapyrus.payments.cp2pkh({ address, network }).output;
       } catch (e) {}

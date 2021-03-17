@@ -274,7 +274,7 @@ export class BaseWallet implements Wallet {
     colorId: Buffer | undefined,
     network?: tapyrus.Network,
   ): Buffer {
-    if (colorId) {
+    if (colorId && colorId.toString('hex') !== BaseWallet.COLOR_ID_FOR_TPC) {
       try {
         return tapyrus.payments.cp2pkh({ address, network }).output!;
       } catch (e) {}

@@ -621,6 +621,11 @@ describe('Wallet', () => {
         );
         assert.strictEqual(tx.ins.length, 1);
         assert.strictEqual(tx.outs.length, 2);
+        assert.strictEqual(tx.outs[0].value, 1);
+        assert.strictEqual(
+          tx.outs[0].script.toString('hex'),
+          '76a9141027dc070ffc33ccc044d7e5f28048efd8623f2f88ac',
+        );
       });
     });
 
