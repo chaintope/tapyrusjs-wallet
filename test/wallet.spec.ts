@@ -10,7 +10,7 @@ import { createWallet, setUpStub } from './testutil';
 import { BaseWallet } from '../src/wallet';
 
 import * as sinon from 'sinon';
-import { SizeBasedFeeProvider } from '../src/fee_provider';
+import { FixedFeeProvider, SizeBasedFeeProvider } from '../src/fee_provider';
 
 describe('Wallet', () => {
   afterEach(() => {
@@ -599,6 +599,70 @@ describe('Wallet', () => {
         );
         assert.strictEqual(tx.ins.length, 2);
         assert.strictEqual(tx.outs.length, 3);
+      });
+    });
+
+    describe('transfer uncolored tpc', () => {
+      it('should build transaction', async () => {
+        const { wallet: alice, dataStore } = createWallet('prod');
+        const stub = setUpStub(alice);
+        stub.onFirstCall().returns(new Promise(resolve => resolve(response)));
+        await alice.importWif(wif);
+        await dataStore.add(utxos);
+        const tx = await alice.transfer(
+          [
+            {
+              colorId: BaseWallet.COLOR_ID_FOR_TPC,
+              amount: amount,
+              toAddress: toAddress,
+            },
+          ],
+          changePubkeyScript,
+        );
+        assert.strictEqual(tx.ins.length, 1);
+        assert.strictEqual(tx.outs.length, 2);
+        assert.strictEqual(tx.outs[0].value, 1);
+        assert.strictEqual(
+          tx.outs[0].script.toString('hex'),
+          '76a9141027dc070ffc33ccc044d7e5f28048efd8623f2f88ac',
+        );
+      });
+    });
+
+    describe('transfer without transaction fee', () => {
+      const createWalletWithoutFee = () => {
+        const config = new Config({
+          host: 'example.org',
+          port: '50001',
+          path: '/',
+          network: tapyrus.networks.prod,
+          feeProvider: new FixedFeeProvider(0),
+        });
+        const keyStore = new LocalKeyStore(config.network);
+        const dataStore = new LocalDataStore();
+        const wallet = new BaseWallet(keyStore, dataStore, config);
+        return { wallet, keyStore, dataStore };
+      };
+
+      it('should build transaction', async () => {
+        const { wallet: alice, dataStore } = createWalletWithoutFee();
+        const stub = setUpStub(alice);
+        stub.onFirstCall().returns(new Promise(resolve => resolve(response)));
+        await alice.importWif(wif);
+        await dataStore.add(utxos);
+        const tx = await alice.transfer(
+          [
+            {
+              colorId: colorId1,
+              amount: amount,
+              toAddress: toAddress,
+            },
+          ],
+          changePubkeyScript,
+        );
+        assert.strictEqual(tx.ins.length, 2);
+        assert.strictEqual(tx.outs.length, 3);
+        assert.strictEqual(tx.outs[2].value, 10_000);
       });
     });
   });

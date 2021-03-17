@@ -89,7 +89,10 @@ class BaseWallet {
         output: changePubkeyScript,
         network: this.config.network,
       });
-      for (const param of params) {
+      const coloredParams = params.filter(
+        p => p.colorId !== BaseWallet.COLOR_ID_FOR_TPC,
+      );
+      for (const param of coloredParams) {
         const coloredUtxos = yield this.utxos(param.colorId);
         const { sum: sumToken, collected: tokens } = this.collect(
           coloredUtxos,
@@ -117,11 +120,15 @@ class BaseWallet {
         txb.addOutput(coloredScript, param.amount);
         txb.addOutput(changeColoredScript, sumToken - param.amount);
       }
+      const uncoloredParams = params.filter(
+        p => p.colorId === BaseWallet.COLOR_ID_FOR_TPC,
+      );
       const uncoloredUtxos = yield this.utxos();
       const fee = this.estimatedFee(token_1.createDummyTransaction(txb));
+      const tpc = uncoloredParams.reduce((sum, param) => sum + param.amount, 0);
       const { sum: sumTpc, collected: tpcs } = this.collect(
         uncoloredUtxos,
-        fee,
+        tpc + fee,
       );
       tpcs.map(utxo => {
         txb.addInput(
@@ -132,7 +139,15 @@ class BaseWallet {
         );
         inputs.push(utxo);
       });
-      txb.addOutput(uncoloredScript.output, sumTpc - fee);
+      for (const param of uncoloredParams) {
+        const script = this.addressToOutput(
+          param.toAddress,
+          Buffer.from(param.colorId, 'hex'),
+          this.config.network,
+        );
+        txb.addOutput(script, param.amount);
+      }
+      txb.addOutput(uncoloredScript.output, sumTpc - tpc - fee);
       const signedTxb = yield signer_1.sign(this, txb, inputs);
       const tx = signedTxb.build();
       yield this.broadcast(tx, options);
@@ -190,7 +205,7 @@ class BaseWallet {
   }
   // convert address to buffer of scriptPubkey
   addressToOutput(address, colorId, network) {
-    if (colorId) {
+    if (colorId && colorId.toString('hex') !== BaseWallet.COLOR_ID_FOR_TPC) {
       try {
         return tapyrus.payments.cp2pkh({ address, network }).output;
       } catch (e) {}

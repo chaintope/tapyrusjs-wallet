@@ -1,8 +1,13 @@
 'use strict';
 Object.defineProperty(exports, '__esModule', { value: true });
 const tapyrus = require('tapyrusjs-lib');
+const wallet_1 = require('./wallet');
 class TransferParams {
-  constructor(colorId, amount, toAddress) {
+  constructor(
+    colorId = wallet_1.BaseWallet.COLOR_ID_FOR_TPC,
+    amount,
+    toAddress,
+  ) {
     this.colorId = colorId;
     this.amount = amount;
     this.toAddress = toAddress;

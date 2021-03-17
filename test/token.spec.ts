@@ -3,6 +3,7 @@ import { describe, it } from 'mocha';
 import * as tapyrus from 'tapyrusjs-lib';
 
 import { createDummyTransaction, TransferParams } from '../src/token';
+import { BaseWallet } from '../src/wallet';
 
 describe('TokenParams', () => {
   describe('new', () => {
@@ -16,6 +17,15 @@ describe('TokenParams', () => {
       assert.strictEqual(params.colorId, colorId);
       assert.strictEqual(params.amount, amount);
       assert.strictEqual(params.toAddress, toAddress);
+    });
+
+    context('with uncolored coin', () => {
+      it('should take 2 parameters(undefined, amount, toAddress)', () => {
+        const params = new TransferParams(undefined, amount, toAddress);
+        assert.strictEqual(params.colorId, BaseWallet.COLOR_ID_FOR_TPC);
+        assert.strictEqual(params.amount, amount);
+        assert.strictEqual(params.toAddress, toAddress);
+      });
     });
   });
 });

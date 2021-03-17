@@ -1,10 +1,15 @@
 import * as tapyrus from 'tapyrusjs-lib';
+import { BaseWallet } from './wallet';
 export class TransferParams {
   colorId: string;
   amount: number;
   toAddress: string;
 
-  constructor(colorId: string, amount: number, toAddress: string) {
+  constructor(
+    colorId: string = BaseWallet.COLOR_ID_FOR_TPC,
+    amount: number,
+    toAddress: string,
+  ) {
     this.colorId = colorId;
     this.amount = amount;
     this.toAddress = toAddress;
