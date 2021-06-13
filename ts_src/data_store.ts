@@ -4,7 +4,8 @@ import { Utxo } from './utxo';
 
 import CordovaDataStore from './data_store/cordova_data_store';
 import LocalDataStore from './data_store/local_data_store';
-export { CordovaDataStore, LocalDataStore };
+import ReactDataStore from './data_store/react_data_store';
+export { CordovaDataStore, ReactDataStore, LocalDataStore };
 
 export interface DataStore {
   clear(): Promise<void>;
