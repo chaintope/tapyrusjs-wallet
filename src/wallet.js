@@ -1,7 +1,10 @@
 'use strict';
 Object.defineProperty(exports, '__esModule', { value: true });
 const tslib_1 = require('tslib');
+const bip39 = require('bip39');
 const tapyrus = require('tapyrusjs-lib');
+const local_data_store_1 = require('./data_store/local_data_store');
+const local_key_store_1 = require('./key_store/local_key_store');
 const rpc_1 = require('./rpc');
 const signer_1 = require('./signer');
 const token_1 = require('./token');
@@ -240,3 +243,34 @@ class BaseWallet {
 BaseWallet.COLOR_ID_FOR_TPC =
   '000000000000000000000000000000000000000000000000000000000000000000';
 exports.BaseWallet = BaseWallet;
+class HDWallet extends BaseWallet {
+  constructor(
+    config,
+    mnemonic,
+    dataStore = new local_data_store_1.default(),
+    keyStore,
+  ) {
+    const _keyStore = keyStore || new local_key_store_1.default(config.network);
+    super(_keyStore, dataStore, config);
+    this._mnemonic = mnemonic || bip39.generateMnemonic();
+    this.addresses = [];
+  }
+  init() {
+    return tslib_1.__awaiter(this, void 0, void 0, function*() {
+      const seed = yield bip39.mnemonicToSeed(this._mnemonic);
+      const node = tapyrus.bip32.fromSeed(seed);
+      this._rootNode = node.derivePath(HDWallet.DerivePath);
+      this._rootNode.network = this.config.network;
+    });
+  }
+  mnemonic() {
+    return this._mnemonic;
+  }
+  generateAddress() {
+    if (!this._rootNode)
+      throw Error('Not yet initialize wallet. Please call `init()` at first.');
+    return this._rootNode.toWIF();
+  }
+}
+HDWallet.DerivePath = "m/44'/2377'/0'/0/0"; // from tips-0044
+exports.HDWallet = HDWallet;

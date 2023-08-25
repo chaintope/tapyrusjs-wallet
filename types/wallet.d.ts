@@ -45,3 +45,13 @@ export declare class BaseWallet implements Wallet {
     private addressToOutput;
     private collect;
 }
+export declare class HDWallet extends BaseWallet {
+    static DerivePath: string;
+    _mnemonic: string;
+    _rootNode?: tapyrus.BIP32Interface;
+    addresses: string[];
+    constructor(config: Config, mnemonic?: string, dataStore?: DataStore, keyStore?: KeyStore);
+    init(): Promise<void>;
+    mnemonic(): string;
+    generateAddress(): string;
+}
