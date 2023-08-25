@@ -1,7 +1,7 @@
 'use strict';
 Object.defineProperty(exports, '__esModule', { value: true });
 const tslib_1 = require('tslib');
-const mock_data_store_1 = require('./mock_data_store');
+const memory_data_store_1 = require('./memory_data_store');
 const UTXOS_STORE_KEY = 'utxos';
 /**
  * LocalDataStore
@@ -9,7 +9,7 @@ const UTXOS_STORE_KEY = 'utxos';
  * This DataStore using `window.localStorage` for store any data.
  * If you create react app, then this dataStore helpfull for keep data on browser.
  */
-class LocalDataStore extends mock_data_store_1.default {
+class LocalDataStore extends memory_data_store_1.default {
   /**
    * Constructor: Load previous data.
    */

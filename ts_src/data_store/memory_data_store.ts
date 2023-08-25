@@ -9,7 +9,7 @@ import { Utxo } from '../utxo';
  *
  * This DataStore is very simple store that save any data in flush memory.
  */
-export default class MockDataStore implements DataStore {
+export default class MemoryDataStore implements DataStore {
   utxos: Utxo[] = [];
 
   async clear(): Promise<void> {
