@@ -2,8 +2,8 @@ import * as tapyrus from 'tapyrusjs-lib';
 import { Balance } from './balance';
 import { Utxo } from './utxo';
 import CordovaDataStore from './data_store/cordova_data_store';
-import LocalDataStore from './data_store/local_data_store';
-export { CordovaDataStore, LocalDataStore };
+import MockDataStore from './data_store/mock_data_store';
+export { CordovaDataStore, MockDataStore };
 export interface DataStore {
     clear(): Promise<void>;
     add(utxos: Utxo[]): Promise<void>;

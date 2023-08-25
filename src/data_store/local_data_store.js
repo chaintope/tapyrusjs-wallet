@@ -1,43 +1,35 @@
 'use strict';
 Object.defineProperty(exports, '__esModule', { value: true });
 const tslib_1 = require('tslib');
-const util = require('../util');
-class LocalDataStore {
+const mock_data_store_1 = require('./mock_data_store');
+const UTXOS_STORE_KEY = 'utxos';
+/**
+ * LocalDataStore
+ *
+ * This DataStore using `window.localStorage` for store any data.
+ * If you create react app, then this dataStore helpfull for keep data on browser.
+ */
+class LocalDataStore extends mock_data_store_1.default {
+  /**
+   * Constructor: Load previous data.
+   */
   constructor() {
-    this.utxos = [];
+    super();
+    const utxosJson = localStorage.getItem(UTXOS_STORE_KEY);
+    if (utxosJson) {
+      this.utxos = JSON.parse(utxosJson);
+    }
   }
   clear() {
     return tslib_1.__awaiter(this, void 0, void 0, function*() {
       this.utxos = [];
+      localStorage.clear();
     });
   }
   add(utxos) {
     return tslib_1.__awaiter(this, void 0, void 0, function*() {
       this.utxos = this.utxos.concat(utxos);
-    });
-  }
-  all() {
-    return tslib_1.__awaiter(this, void 0, void 0, function*() {
-      return this.utxos;
-    });
-  }
-  utxosFor(keys, colorId) {
-    return tslib_1.__awaiter(this, void 0, void 0, function*() {
-      const scripts = util.keyToScript(keys, colorId);
-      return this.utxos.filter(utxo => {
-        return scripts.find(script => script === utxo.scriptPubkey);
-      });
-    });
-  }
-  balanceFor(keys, colorId) {
-    return tslib_1.__awaiter(this, void 0, void 0, function*() {
-      const utxos = yield this.utxosFor(keys, colorId);
-      return util.sumBalance(utxos, colorId);
-    });
-  }
-  processTx(_keys, _tx) {
-    return tslib_1.__awaiter(this, void 0, void 0, function*() {
-      return;
+      localStorage.setItem(UTXOS_STORE_KEY, JSON.stringify(this.utxos));
     });
   }
 }

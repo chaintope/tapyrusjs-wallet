@@ -2,7 +2,7 @@ import * as assert from 'assert';
 import { describe, it } from 'mocha';
 
 import { Config } from '../src/config';
-import LocalDataStore from '../src/data_store/local_data_store';
+import MockDataStore from '../src/data_store/mock_data_store';
 import LocalKeyStore from '../src/key_store/local_key_store';
 import { Utxo } from '../src/utxo';
 import * as tapyrus from 'tapyrusjs-lib';
@@ -480,7 +480,7 @@ describe('Wallet', () => {
           feeProvider: new SizeBasedFeeProvider(30),
         });
         const keyStore = new LocalKeyStore(config.network);
-        const dataStore = new LocalDataStore();
+        const dataStore = new MockDataStore();
         const alice = new BaseWallet(keyStore, dataStore, config);
         assert.strictEqual(alice.estimatedFee(tx), 300);
       });
@@ -639,7 +639,7 @@ describe('Wallet', () => {
           feeProvider: new FixedFeeProvider(0),
         });
         const keyStore = new LocalKeyStore(config.network);
-        const dataStore = new LocalDataStore();
+        const dataStore = new MockDataStore();
         const wallet = new BaseWallet(keyStore, dataStore, config);
         return { wallet, keyStore, dataStore };
       };

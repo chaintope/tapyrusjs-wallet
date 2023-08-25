@@ -1,4 +1,4 @@
-import LocalDataStore from '../src/data_store/local_data_store';
+import MockDataStore from '../src/data_store/mock_data_store';
 import LocalKeyStore from '../src/key_store/local_key_store';
 import { Config } from '../src/config';
 import { BaseWallet } from '../src/wallet';
@@ -9,7 +9,7 @@ export const createWallet = (
 ): {
   wallet: BaseWallet;
   keyStore: LocalKeyStore;
-  dataStore: LocalDataStore;
+  dataStore: MockDataStore;
 } => {
   const config = new Config({
     host: 'example.org',
@@ -18,7 +18,7 @@ export const createWallet = (
     network,
   });
   const keyStore = new LocalKeyStore(config.network);
-  const dataStore = new LocalDataStore();
+  const dataStore = new MockDataStore();
   const wallet = new BaseWallet(keyStore, dataStore, config);
   return {
     wallet,
