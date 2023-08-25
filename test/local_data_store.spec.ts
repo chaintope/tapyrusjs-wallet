@@ -32,7 +32,7 @@ describe('LocalDataStore', () => {
     localStorage.clear();
   });
 
-  it('can load previouse storage data', async () => {
+  it('can load previous storage data', async () => {
     const dataStore = new LocalDataStore();
     assert.strictEqual(dataStore.utxos.length, 2);
   });
