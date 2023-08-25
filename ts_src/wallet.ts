@@ -1,8 +1,11 @@
+import * as bip39 from 'bip39';
 import * as tapyrus from 'tapyrusjs-lib';
 import { Balance } from './balance';
 import { Config } from './config';
 import { DataStore } from './data_store';
+import LocalDataStore from './data_store/local_data_store';
 import { KeyStore } from './key_store';
+import LocalKeyStore from './key_store/local_key_store';
 import { Rpc } from './rpc';
 import { sign } from './signer';
 import { createDummyTransaction, TransferParams } from './token';
@@ -308,5 +311,42 @@ export class BaseWallet implements Wallet {
     } else {
       throw new Error('Insufficient Token');
     }
+  }
+}
+
+export class HDWallet extends BaseWallet {
+  static DerivePath = "m/44'/2377'/0'/0/0"; // from tips-0044
+
+  _mnemonic: string;
+  _rootNode?: tapyrus.BIP32Interface;
+  addresses: string[];
+
+  constructor(
+    config: Config,
+    mnemonic?: string,
+    dataStore: DataStore = new LocalDataStore(),
+    keyStore?: KeyStore,
+  ) {
+    const _keyStore = keyStore || new LocalKeyStore(config.network);
+    super(_keyStore, dataStore, config);
+
+    this._mnemonic = mnemonic || bip39.generateMnemonic();
+    this.addresses = [];
+  }
+
+  async init(): Promise<void> {
+    const seed = await bip39.mnemonicToSeed(this._mnemonic);
+    const node: tapyrus.bip32.BIP32Interface = tapyrus.bip32.fromSeed(seed);
+    this._rootNode = node.derivePath(HDWallet.DerivePath);
+    this._rootNode.network = this.config.network;
+  }
+  mnemonic(): string {
+    return this._mnemonic;
+  }
+
+  generateAddress(): string {
+    if (!this._rootNode)
+      throw Error('Not yet initialize wallet. Please call `init()` at first.');
+    return this._rootNode.toWIF();
   }
 }
