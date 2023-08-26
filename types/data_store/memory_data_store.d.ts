@@ -3,7 +3,7 @@ import { Balance } from '../balance';
 import { DataStore } from '../data_store';
 import { Utxo } from '../utxo';
 /**
- * MockDataStore
+ * MemoryDataStore
  *
  * This DataStore is very simple store that save any data in flush memory.
  */

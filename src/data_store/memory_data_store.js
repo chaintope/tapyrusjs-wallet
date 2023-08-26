@@ -3,7 +3,7 @@ Object.defineProperty(exports, '__esModule', { value: true });
 const tslib_1 = require('tslib');
 const util = require('../util');
 /**
- * MockDataStore
+ * MemoryDataStore
  *
  * This DataStore is very simple store that save any data in flush memory.
  */

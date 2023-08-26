@@ -5,7 +5,7 @@ import * as util from '../util';
 import { Utxo } from '../utxo';
 
 /**
- * MockDataStore
+ * MemoryDataStore
  *
  * This DataStore is very simple store that save any data in flush memory.
  */
