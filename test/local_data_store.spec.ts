@@ -23,12 +23,12 @@ describe('LocalDataStore', () => {
     ),
   ];
 
-  before(() => {
+  beforeEach(() => {
     // store previouse datas.
     localStorage.setItem('utxos', JSON.stringify(utxos));
   });
 
-  after(() => {
+  afterEach(() => {
     localStorage.clear();
   });
 
@@ -57,5 +57,18 @@ describe('LocalDataStore', () => {
     await dataStore.clear();
     const expect = new LocalDataStore();
     assert.strictEqual(expect.utxos.length, 0);
+  });
+  it('has error when limit over', () => {
+    const dataStore = new LocalDataStore(3);
+    return dataStore
+      .add(utxos)
+      .then(
+        () => assert.fail('must throw error.'),
+        (e: Error) =>
+          assert.strictEqual(
+            e.message,
+            'Limit over error. Utxo items count was over 3.',
+          ),
+      );
   });
 });
