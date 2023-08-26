@@ -1,5 +1,5 @@
 import MemoryDataStore from '../src/data_store/memory_data_store';
-import LocalKeyStore from '../src/key_store/local_key_store';
+import MemoryKeyStore from '../src/key_store/memory_key_store';
 import { Config } from '../src/config';
 import { BaseWallet } from '../src/wallet';
 import * as sinon from 'sinon';
@@ -8,7 +8,7 @@ export const createWallet = (
   network: string,
 ): {
   wallet: BaseWallet;
-  keyStore: LocalKeyStore;
+  keyStore: MemoryKeyStore;
   dataStore: MemoryDataStore;
 } => {
   const config = new Config({
@@ -17,7 +17,7 @@ export const createWallet = (
     path: '/',
     network,
   });
-  const keyStore = new LocalKeyStore(config.network);
+  const keyStore = new MemoryKeyStore(config.network);
   const dataStore = new MemoryDataStore();
   const wallet = new BaseWallet(keyStore, dataStore, config);
   return {

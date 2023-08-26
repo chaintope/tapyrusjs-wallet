@@ -4,7 +4,7 @@ import MemoryDataStore from './memory_data_store';
  * LocalDataStore
  *
  * This DataStore using `window.localStorage` for store any data.
- * If you create react app, then this dataStore helpfull for keep data on browser.
+ * If you create react app, then this dataStore helpful for keep data on browser.
  *
  * NOTE:
  *   Browser Local Storage has store limit that is 10 MB. Therefore,

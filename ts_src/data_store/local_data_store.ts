@@ -8,7 +8,7 @@ const DEFAULT_UTXOS_LIMIT = 5120;
  * LocalDataStore
  *
  * This DataStore using `window.localStorage` for store any data.
- * If you create react app, then this dataStore helpfull for keep data on browser.
+ * If you create react app, then this dataStore helpful for keep data on browser.
  *
  * NOTE:
  *   Browser Local Storage has store limit that is 10 MB. Therefore,
@@ -31,7 +31,7 @@ export default class LocalDataStore extends MemoryDataStore {
 
   async clear(): Promise<void> {
     this.utxos = [];
-    localStorage.clear();
+    localStorage.setItem(UTXOS_STORE_KEY, JSON.stringify(this.utxos));
   }
 
   async add(utxos: Utxo[]): Promise<void> {
