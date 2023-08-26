@@ -1,13 +1,22 @@
-import * as tapyrus from 'tapyrusjs-lib';
-import { Balance } from '../balance';
-import { DataStore } from '../data_store';
 import { Utxo } from '../utxo';
-export default class LocalDataStore implements DataStore {
-    utxos: Utxo[];
+import MemoryDataStore from './memory_data_store';
+/**
+ * LocalDataStore
+ *
+ * This DataStore using `window.localStorage` for store any data.
+ * If you create react app, then this dataStore helpful for keep data on browser.
+ *
+ * NOTE:
+ *   Browser Local Storage has store limit that is 10 MB. Therefore,
+ *   This class only stored until 5,120 items at default.
+ *   This limit can be changed with constructor params.
+ */
+export default class LocalDataStore extends MemoryDataStore {
+    _limit: number;
+    /**
+     * Constructor: Load previous data.
+     */
+    constructor(limit?: number);
     clear(): Promise<void>;
     add(utxos: Utxo[]): Promise<void>;
-    all(): Promise<Utxo[]>;
-    utxosFor(keys: string[], colorId?: string): Promise<Utxo[]>;
-    balanceFor(keys: string[], colorId?: string): Promise<Balance>;
-    processTx(_keys: string[], _tx: tapyrus.Transaction): Promise<void>;
 }

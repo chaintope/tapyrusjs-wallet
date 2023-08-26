@@ -1,6 +1,6 @@
 import * as assert from 'assert';
-import { Balance } from '../src/balance';
 import { describe, it } from 'mocha';
+import { Balance } from '../src/balance';
 import * as util from '../src/util';
 import { Utxo } from '../src/utxo';
 import * as wallet from '../src/wallet';

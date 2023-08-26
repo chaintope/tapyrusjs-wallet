@@ -2,11 +2,11 @@ import * as tapyrus from 'tapyrusjs-lib';
 import * as assert from 'assert';
 import { describe, it } from 'mocha';
 
-import LocalKeyStore from '../src/key_store/local_key_store';
+import MemoryKeyStore from '../src/key_store/memory_key_store';
 
-describe('LocalKeyStore', () => {
+describe('MemoryKeyStore', () => {
   describe('addPrivateKey', () => {
-    const keyStore = new LocalKeyStore(tapyrus.networks.prod);
+    const keyStore = new MemoryKeyStore(tapyrus.networks.prod);
     const priv = 'L4aywsjiFjDw9pqon2GDQtomfk36gx2xdUtoU28aaey8KJwUHder';
     it('add key to storage', async () => {
       await keyStore.addPrivateKey(priv);
@@ -17,7 +17,7 @@ describe('LocalKeyStore', () => {
     });
   });
   describe('addExtendedPrivateKey', () => {
-    const keyStore = new LocalKeyStore(tapyrus.networks.prod);
+    const keyStore = new MemoryKeyStore(tapyrus.networks.prod);
     const xpriv =
       'xprv9s21ZrQH143K2xjLUb6KPjDjExyBLXq6K9u1gGQVMLyvewCLXdivoY7w3iRxAk1eX7k51Dxy71QdfRSQMmiMUGUi5iKfsKh2wfZVEGcqXEe';
     it('add key to storage', async () => {
@@ -29,7 +29,7 @@ describe('LocalKeyStore', () => {
     });
   });
   describe('clear', () => {
-    const keyStore = new LocalKeyStore(tapyrus.networks.prod);
+    const keyStore = new MemoryKeyStore(tapyrus.networks.prod);
     const priv = 'L4aywsjiFjDw9pqon2GDQtomfk36gx2xdUtoU28aaey8KJwUHder';
     it('add key to storage', async () => {
       await keyStore.addPrivateKey(priv);

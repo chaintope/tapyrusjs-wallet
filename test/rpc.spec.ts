@@ -1,5 +1,5 @@
-import 'isomorphic-fetch';
 import * as assert from 'assert';
+import 'isomorphic-fetch';
 import { describe, it } from 'mocha';
 import { Rpc } from '../src/rpc';
 import * as sinon from 'sinon';

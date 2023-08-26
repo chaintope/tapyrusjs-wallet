@@ -2,8 +2,8 @@ import * as assert from 'assert';
 import { describe, it } from 'mocha';
 
 import { Config } from '../src/config';
-import LocalDataStore from '../src/data_store/local_data_store';
-import LocalKeyStore from '../src/key_store/local_key_store';
+import MemoryDataStore from '../src/data_store/memory_data_store';
+import MemoryKeyStore from '../src/key_store/memory_key_store';
 import { Utxo } from '../src/utxo';
 import * as tapyrus from 'tapyrusjs-lib';
 import { createWallet, setUpStub } from './testutil';
@@ -479,8 +479,8 @@ describe('Wallet', () => {
           network: 'prod',
           feeProvider: new SizeBasedFeeProvider(30),
         });
-        const keyStore = new LocalKeyStore(config.network);
-        const dataStore = new LocalDataStore();
+        const keyStore = new MemoryKeyStore(config.network);
+        const dataStore = new MemoryDataStore();
         const alice = new BaseWallet(keyStore, dataStore, config);
         assert.strictEqual(alice.estimatedFee(tx), 300);
       });
@@ -638,8 +638,8 @@ describe('Wallet', () => {
           network: tapyrus.networks.prod,
           feeProvider: new FixedFeeProvider(0),
         });
-        const keyStore = new LocalKeyStore(config.network);
-        const dataStore = new LocalDataStore();
+        const keyStore = new MemoryKeyStore(config.network);
+        const dataStore = new MemoryDataStore();
         const wallet = new BaseWallet(keyStore, dataStore, config);
         return { wallet, keyStore, dataStore };
       };
