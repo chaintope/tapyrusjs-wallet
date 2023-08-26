@@ -14,7 +14,7 @@
     "javascript"
   ],
   "scripts": {
-    "build": "npm run clean && tsc -p ./tsconfig.json && npm run formatjs",
+    "build": "npm run clean && npm run format && tsc -p ./tsconfig.json && npm run formatjs",
     "build:tests": "npm run clean:jstests && tsc -p ./test/tsconfig.json",
     "clean": "rimraf src types",
     "clean:jstests": "rimraf 'test/**/!(ts-node-register)*.js'",
